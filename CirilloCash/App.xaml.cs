@@ -1,6 +1,4 @@
-﻿using CirilloCash;
-
-namespace CirilloCash
+﻿namespace CirilloCash
 {
     public partial class App : Application
     {

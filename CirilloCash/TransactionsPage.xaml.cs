@@ -18,19 +18,16 @@
             base.OnDisappearing();
         }
 
-        async void OnLoadClicked(object sender, EventArgs e)
+        public async void OnLoadClicked(object sender, EventArgs e)
         {
 #if ANDROID
-
             if (!StoragePermissionHelper.HasManageAllFilesPermission())
             {
                 StoragePermissionHelper.RequestManageAllFilesPermission();
                 bool granted = await StoragePermissionHelper.WaitForPermissionResult();
                 if (!granted)
                 {
-                    await DisplayAlert("Permesso negato",
-                        "Servono permessi per accedere ai file!",
-                        "OK");
+                    await DisplayAlert("Permesso negato", "Servono permessi per accedere ai file!", "OK");
                     return;
                 }
             }

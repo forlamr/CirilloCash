@@ -205,7 +205,7 @@ namespace CirilloCash
                 total += value * prices[dt];
             }
 
-            transaction += $"TOTALE={total} €";
+            transaction += $"TOTALE={total}";
 
             AppendTextToDownloadAsync("transazioni.txt", transaction).ConfigureAwait(false);
 
@@ -217,7 +217,7 @@ namespace CirilloCash
 #if ANDROID
             var resolver = Platform.CurrentActivity.ContentResolver;
 
-            // Controlla se il file esiste già
+            // Check if the file already exists
             string selection = $"{MediaStore.Downloads.InterfaceConsts.DisplayName}=?";
             string[] selectionArgs = { fileName };
             var cursor = resolver.Query(MediaStore.Downloads.ExternalContentUri, null, selection, selectionArgs, null);
@@ -231,7 +231,7 @@ namespace CirilloCash
                 cursor.Close();
             }
 
-            // Se non esiste, crealo
+            // If not found, create a new file
             if (fileUri == null)
             {
                 var values = new ContentValues();
@@ -241,7 +241,7 @@ namespace CirilloCash
                 fileUri = resolver.Insert(MediaStore.Downloads.ExternalContentUri, values);
             }
 
-            // Apri il file e appendi
+            // Open the file for writing
             if (fileUri != null)
             {
                 using var stream = resolver.OpenOutputStream(fileUri, "wa"); // "wa" = write+append

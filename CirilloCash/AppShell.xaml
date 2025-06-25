@@ -20,4 +20,10 @@
                   Route="TransactionsPage" />
     </FlyoutItem>
 
+    <FlyoutItem Title="Resoconto">
+        <ShellContent Title="Resoconto"
+                  ContentTemplate="{DataTemplate local:ResultsPage}"
+                  Route="ResultsPage" />
+    </FlyoutItem>
+
 </Shell>
