@@ -56,9 +56,9 @@
             string file = "transazioni.txt";
             string[] lines = new[]
             {
-                "Bionda=1;Rossa=1;Spritz=1;Acqua=1;Coca=1;TOTALE=19,5",
-                "Bionda=1;Rossa=1;Spritz=1;Acqua=1;Coca=0;TOTALE=16,5",
-                "Bionda=0;Rossa=0;Spritz=0;Acqua=2;Coca=0;TOTALE=2"
+                "Bionda=1;Rossa=1;Spritz=1;Acqua=1;Bibita=1;TOTALE=19,5",
+                "Bionda=1;Rossa=1;Spritz=1;Acqua=1;Bibita=0;TOTALE=16,5",
+                "Bionda=0;Rossa=0;Spritz=0;Acqua=2;Bibita=0;TOTALE=2"
             };
             File.WriteAllLines(file, lines);
 

@@ -34,6 +34,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -41,20 +42,23 @@
                 </Grid.ColumnDefinitions>
 
                 <Button x:Name="AddBlondeBeerBtn" Text="Bionda" Grid.Row="0" Grid.Column="0" Clicked="OnAddBlondeBeerClicked"/>
-                <Button x:Name="RemoveBlondeBeerBtn" Text="-" Grid.Row="0" Grid.Column="1" Clicked="OnRemoveBlondeBeerClicked"/>
+                <Button x:Name="RemoveBlondeBeerBtn" Text="  -  " Grid.Row="0" Grid.Column="1" Clicked="OnRemoveBlondeBeerClicked"/>
                 <Button x:Name="AddRedBeerBtn" Text="Rossa" Grid.Row="1" Grid.Column="0" Clicked="OnAddRedBeerClicked"/>
                 <Button x:Name="RemoveRedBeerBtn" Text="-" Grid.Row="1" Grid.Column="1" Clicked="OnRemoveRedBeerClicked"/>
                 <Button x:Name="AddSpritzBtn" Text="Spritz" Grid.Row="2" Grid.Column="0" Clicked="OnAddSpritzClicked"/>
                 <Button x:Name="RemoveSpritzBtn" Text="-" Grid.Row="2" Grid.Column="1" Clicked="OnRemoveSpritzClicked"/>
                 <Button x:Name="AddWaterBtn" Text="Acqua" Grid.Row="3" Grid.Column="0" Clicked="OnAddWaterClicked"/>
                 <Button x:Name="RemoveWaterBtn" Text="-" Grid.Row="3" Grid.Column="1" Clicked="OnRemoveWaterClicked"/>
-                <Button x:Name="AddCocaColaBtn" Text="Coca-Cola" Grid.Row="4" Grid.Column="0" Clicked="OnAddCocaColaClicked"/>
-                <Button x:Name="RemoveCocaColaBtn" Text="-" Grid.Row="4" Grid.Column="1" Clicked="OnRemoveCocaColaClicked"/>
+                <Button x:Name="AddSoftDrinkBtn" Text="Bibita" Grid.Row="4" Grid.Column="0" Clicked="OnAddSoftDrinkClicked"/>
+                <Button x:Name="RemoveSoftDrinkBtn" Text="-" Grid.Row="4" Grid.Column="1" Clicked="OnRemoveSoftDrinkClicked"/>
+                <Button x:Name="AddWaterMelonBtn" Text="Anguria" Grid.Row="5" Grid.Column="0" Clicked="OnAddWaterMelonClicked"/>
+                <Button x:Name="RemoveWaterMelonBtn" Text="-" Grid.Row="5" Grid.Column="1" Clicked="OnRemoveWaterMelonClicked"/>
             </Grid>
 
             <!-- Grid Conto -->
             <Grid x:Name="TotaleGrid" Grid.Column="1" Padding="10" RowSpacing="10" ColumnSpacing="20">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>

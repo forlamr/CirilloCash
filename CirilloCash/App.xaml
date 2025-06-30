@@ -14,9 +14,10 @@
                 <Setter Property="BackgroundColor" Value="LightGrey" />
                 <Setter Property="TextColor" Value="Black" />
                 <Setter Property="CornerRadius" Value="5" />
-                <Setter Property="Padding" Value="13" />
+                <Setter Property="Padding" Value="11" />
                 <Setter Property="HeightRequest" Value="60" />
                 <Setter Property="FontSize" Value="17" />
+                <Setter Property="HeightRequest" Value="55" />
             </Style>
 
             <Style TargetType="Label">

@@ -19,8 +19,11 @@ namespace CirilloCash
             Spritz,
             [Description("Acqua")]
             Water,
-            [Description("Coca")]
-            CocaCola
+            [Description("Bibita")]
+            SoftDrink,
+            [Description("Anguria")]
+            WarterMelon
+
         }
 
         Label[,] labelGrid;
@@ -29,11 +32,12 @@ namespace CirilloCash
 
         Dictionary<DrinkType, double> prices = new Dictionary<DrinkType, double>
         {
-            { DrinkType.BlondeBeer , 4.5 },
-            { DrinkType.RedBeer, 5 },
-            { DrinkType.Spritz, 6 },
+            { DrinkType.BlondeBeer , 4 },
+            { DrinkType.RedBeer, 4.5 },
+            { DrinkType.Spritz, 4 },
             { DrinkType.Water, 1 },
-            { DrinkType.CocaCola, 3 }
+            { DrinkType.SoftDrink, 2 },
+            { DrinkType.WarterMelon, 3 }
         };
 
         double totalBill = 0;
@@ -161,27 +165,53 @@ namespace CirilloCash
 
             UpdateBill();
         }
-        private void OnAddCocaColaClicked(object sender, EventArgs e)
+        private void OnAddSoftDrinkClicked(object sender, EventArgs e)
         {
-            if (drinks.ContainsKey(DrinkType.CocaCola))
+            if (drinks.ContainsKey(DrinkType.SoftDrink))
             {
-                drinks[DrinkType.CocaCola]++;
+                drinks[DrinkType.SoftDrink]++;
             }
             else
             {
-                drinks.Add(DrinkType.CocaCola, 1);
+                drinks.Add(DrinkType.SoftDrink, 1);
             }
 
             UpdateBill();
         }
-        private void OnRemoveCocaColaClicked(object sender, EventArgs e)
+        private void OnRemoveSoftDrinkClicked(object sender, EventArgs e)
         {
-            if (drinks.ContainsKey(DrinkType.CocaCola) && drinks[DrinkType.CocaCola] > 0)
+            if (drinks.ContainsKey(DrinkType.SoftDrink) && drinks[DrinkType.SoftDrink] > 0)
             {
-                drinks[DrinkType.CocaCola]--;
-                if (drinks[DrinkType.CocaCola] == 0)
+                drinks[DrinkType.SoftDrink]--;
+                if (drinks[DrinkType.SoftDrink] == 0)
                 {
-                    drinks.Remove(DrinkType.CocaCola);
+                    drinks.Remove(DrinkType.SoftDrink);
+                }
+            }
+
+            UpdateBill();
+        }
+        private void OnAddWaterMelonClicked(object sender, EventArgs e)
+        {
+            if (drinks.ContainsKey(DrinkType.WarterMelon))
+            {
+                drinks[DrinkType.WarterMelon]++;
+            }
+            else
+            {
+                drinks.Add(DrinkType.WarterMelon, 1);
+            }
+
+            UpdateBill();
+        }
+        private void OnRemoveWaterMelonClicked(object sender, EventArgs e)
+        {
+            if (drinks.ContainsKey(DrinkType.WarterMelon) && drinks[DrinkType.WarterMelon] > 0)
+            {
+                drinks[DrinkType.WarterMelon]--;
+                if (drinks[DrinkType.WarterMelon] == 0)
+                {
+                    drinks.Remove(DrinkType.WarterMelon);
                 }
             }
 
