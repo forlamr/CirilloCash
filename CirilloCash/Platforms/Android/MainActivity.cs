@@ -18,5 +18,16 @@ namespace CirilloCash
                 StoragePermissionCallback.OnResult?.Invoke(granted);
             }
         }
+
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+        {
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+
+            if (requestCode == BluetoothPermissionHelper.RequestCode)
+            {
+                var granted = grantResults.Length > 0 && grantResults.All(result => result == Permission.Granted);
+                BluetoothPermissionCallback.OnResult?.Invoke(granted);
+            }
+        }
     }
 }

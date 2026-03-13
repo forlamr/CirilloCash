@@ -150,10 +150,12 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <Button x:Name="CleanBtn" Text="Pulisci" Grid.Row="0" Grid.Column="0" Clicked="OnCleanClicked" BackgroundColor="Yellow"/>
             <Button x:Name="SaveBtn" Text="Salva" Grid.Row="0" Grid.Column="1" Clicked="OnSaveClicked" BackgroundColor="Yellow"/>
+            <Button x:Name="PrintBtn" Text="Stampa" Grid.Row="0" Grid.Column="2" Clicked="OnPrintClicked" BackgroundColor="Yellow"/>
         </Grid>
     </Grid>
 

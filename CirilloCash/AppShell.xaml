@@ -26,4 +26,10 @@
                   Route="ResultsPage" />
     </FlyoutItem>
 
+    <FlyoutItem Title="Stampante">
+        <ShellContent Title="Impostazioni Stampante"
+                  ContentTemplate="{DataTemplate local:PrinterSettingsPage}"
+                  Route="PrinterSettingsPage" />
+    </FlyoutItem>
+
 </Shell>

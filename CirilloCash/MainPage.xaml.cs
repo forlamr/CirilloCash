@@ -1,5 +1,7 @@
-﻿using System.ComponentModel;
-using static Microsoft.Maui.ApplicationModel.Permissions;
+using System.ComponentModel;
+using System.IO;
+using System.Text;
+using CirilloCash.Services;
 #if ANDROID
 using Android.Content;
 using Android.Provider;
@@ -23,14 +25,13 @@ namespace CirilloCash
             SoftDrink,
             [Description("Anguria")]
             WarterMelon
-
         }
 
         Label[,] labelGrid;
 
-        Dictionary<DrinkType, int> drinks = new Dictionary<DrinkType, int>();
+        Dictionary<DrinkType, int> drinks = new();
 
-        Dictionary<DrinkType, double> prices = new Dictionary<DrinkType, double>
+        Dictionary<DrinkType, double> prices = new()
         {
             { DrinkType.BlondeBeer , 4 },
             { DrinkType.RedBeer, 4.5 },
@@ -42,7 +43,7 @@ namespace CirilloCash
 
         double totalBill = 0;
         double totalMoney = 0;
-
+        readonly ThermalPrinterService thermalPrinterService = new();
 
         public MainPage()
         {
@@ -223,23 +224,72 @@ namespace CirilloCash
             CleanBill();
         }
 
-        private void OnSaveClicked(object sender, EventArgs e)
+        private async void OnSaveClicked(object sender, EventArgs e)
         {
-            string transaction = "";
-            double total = 0;
-            var dtValues = Enum.GetValues<DrinkType>();
-            foreach (var dt in dtValues)
+            if (!drinks.Any() || totalBill <= 0)
             {
-                drinks.TryGetValue(dt, out int value);
-                transaction += $"{dt.ToDescription()}={value};";
-                total += value * prices[dt];
+                await DisplayAlert("Salvataggio", "Nessuna transazione da salvare.", "OK");
+                return;
             }
 
-            transaction += $"TOTALE={total}";
+            if (!await EnsureBluetoothPermissionAsync())
+            {
+                await DisplayAlert("Stampa", "Permesso Bluetooth negato. Abilita 'Dispositivi nelle vicinanze'.", "OK");
+                return;
+            }
 
-            AppendTextToDownloadAsync("transazioni.txt", transaction).ConfigureAwait(false);
+            var transactionData = BuildTransactionData();
+            await AppendTextToDownloadAsync("transazioni.txt", transactionData.SerializedTransaction);
+
+            var printResult = await thermalPrinterService.PrintAsync(
+                transactionData.ReceiptText,
+                PrinterSettings.PrinterNameHint,
+                PrinterSettings.PrinterMacAddress);
+            if (!printResult.Success)
+            {
+                await DisplayAlert("Stampa", printResult.Message, "OK");
+            }
 
             CleanBill();
+        }
+
+        private async void OnPrintClicked(object sender, EventArgs e)
+        {
+            if (!drinks.Any() || totalBill <= 0)
+            {
+                await DisplayAlert("Stampa", "Nessun conto da stampare.", "OK");
+                return;
+            }
+
+            if (!await EnsureBluetoothPermissionAsync())
+            {
+                await DisplayAlert("Stampa", "Permesso Bluetooth negato. Abilita 'Dispositivi nelle vicinanze'.", "OK");
+                return;
+            }
+
+            var transactionData = BuildTransactionData();
+            var printResult = await thermalPrinterService.PrintAsync(
+                transactionData.ReceiptText,
+                PrinterSettings.PrinterNameHint,
+                PrinterSettings.PrinterMacAddress);
+
+            await DisplayAlert("Stampa", printResult.Message, "OK");
+        }
+
+        private static async Task<bool> EnsureBluetoothPermissionAsync()
+        {
+#if ANDROID
+            if (BluetoothPermissionHelper.AreBluetoothPermissionsGranted())
+            {
+                return true;
+            }
+
+            BluetoothPermissionHelper.RequestBluetoothPermissions();
+            return await BluetoothPermissionHelper.WaitForPermissionResult();
+#else
+            await Task.CompletedTask;
+            return true;
+#endif
         }
 
         public async Task AppendTextToDownloadAsync(string fileName, string text)
@@ -281,6 +331,36 @@ namespace CirilloCash
 #endif
         }
 
+        private (string SerializedTransaction, string ReceiptText) BuildTransactionData()
+        {
+            var transactionBuilder = new StringBuilder();
+            var receiptBuilder = new StringBuilder();
+
+            double total = 0;
+            transactionBuilder.Append($"DATA={DateTime.Now:yyyy-MM-dd HH:mm:ss};");
+            receiptBuilder.AppendLine("BIBITE ACQUISTATE");
+            receiptBuilder.AppendLine("------------------------------");
+
+            var dtValues = Enum.GetValues<DrinkType>();
+            foreach (var dt in dtValues)
+            {
+                drinks.TryGetValue(dt, out int quantity);
+                var drinkTotal = quantity * prices[dt];
+                total += drinkTotal;
+
+                transactionBuilder.Append($"{dt.ToDescription()}={quantity};");
+                if (quantity > 0)
+                {
+                    receiptBuilder.AppendLine($"{dt.ToDescription(),-12}{quantity,3}");
+                }
+            }
+
+            transactionBuilder.Append($"TOTALE={total:0.00}");
+            receiptBuilder.AppendLine("------------------------------");
+
+            return (transactionBuilder.ToString(), receiptBuilder.ToString());
+        }
+
         public void UpdateBill()
         {
             foreach (var label in labelGrid)
@@ -303,13 +383,13 @@ namespace CirilloCash
                 rowCounter++;
             }
 
-            labelGrid[rowCounter, 0].Text = $"---------";
-            labelGrid[rowCounter, 1].Text = $"---------";
-            labelGrid[rowCounter, 2].Text = $"---------";
+            labelGrid[rowCounter, 0].Text = "---------";
+            labelGrid[rowCounter, 1].Text = "---------";
+            labelGrid[rowCounter, 2].Text = "---------";
 
             rowCounter++;
 
-            labelGrid[rowCounter, 0].Text = $"TOTALE";
+            labelGrid[rowCounter, 0].Text = "TOTALE";
             labelGrid[rowCounter, 2].Text = $"{total} €";
 
             totalBill = total;
@@ -326,8 +406,8 @@ namespace CirilloCash
             totalBill = 0;
             totalMoney = 0;
 
-            ReminderLb.Text = $"";
-            MoneyLb.Text = $"";
+            ReminderLb.Text = "";
+            MoneyLb.Text = "";
         }
 
         public void OnM100Clicked(object sender, EventArgs e)
@@ -379,8 +459,8 @@ namespace CirilloCash
         public void OnCleanMoneyClicked(object sender, EventArgs e)
         {
             totalMoney = 0;
-            ReminderLb.Text = $"";
-            MoneyLb.Text = $"";
+            ReminderLb.Text = "";
+            MoneyLb.Text = "";
         }
 
         public void OnComputeReminderClicked(object sender, EventArgs e)

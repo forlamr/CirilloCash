@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CirilloCash.PrinterSettingsPage"
+             Title="Impostazioni Stampante">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label Text="Configura la stampante termica Bluetooth (X5)." FontAttributes="Bold" />
+            <Label Text="Nome stampante (parziale)" />
+            <Entry x:Name="PrinterNameEntry" Placeholder="X5" />
+
+            <Label Text="MAC stampante (opzionale, consigliato)" />
+            <Entry x:Name="PrinterMacEntry" Placeholder="AA:BB:CC:DD:EE:FF" TextTransform="Uppercase" />
+
+            <Label Text="Protocollo stampa" />
+            <Label Text="JL_SPP_RASTER" FontAttributes="Bold" />
+            <Label Text="Protocollo fisso ottimizzato per X5/Mini Printer." FontSize="12" />
+
+            <Button Text="Salva" Clicked="OnSaveClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

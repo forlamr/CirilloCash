@@ -7,6 +7,7 @@
             InitializeComponent();
             Routing.RegisterRoute(nameof(TransactionsPage), typeof(TransactionsPage));
             Routing.RegisterRoute(nameof(ResultsPage), typeof(ResultsPage));
+            Routing.RegisterRoute(nameof(PrinterSettingsPage), typeof(PrinterSettingsPage));
         }
     }
 }
