@@ -6,18 +6,38 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Configura la stampante termica Bluetooth (X5)." FontAttributes="Bold" />
-            <Label Text="Nome stampante (parziale)" />
-            <Entry x:Name="PrinterNameEntry" Placeholder="X5" />
+            <Label Text="Configurazione stampante termica." FontAttributes="Bold" />
 
-            <Label Text="MAC stampante (opzionale, consigliato)" />
-            <Entry x:Name="PrinterMacEntry" Placeholder="AA:BB:CC:DD:EE:FF" TextTransform="Uppercase" />
+            <Label Text="Tipo stampante" />
+            <Picker x:Name="PrinterTypePicker" SelectedIndexChanged="OnPrinterTypeChanged">
+                <Picker.Items>
+                    <x:String>X5 (Bluetooth)</x:String>
+                    <x:String>Ethernet (TCP/ESC-POS)</x:String>
+                </Picker.Items>
+            </Picker>
 
-            <Label Text="Protocollo stampa" />
-            <Label Text="JL_SPP_RASTER" FontAttributes="Bold" />
-            <Label Text="Protocollo fisso ottimizzato per X5/Mini Printer." FontSize="12" />
+            <VerticalStackLayout x:Name="X5Section" Spacing="8">
+                <Label Text="Nome stampante (parziale)" />
+                <Entry x:Name="PrinterNameEntry" Placeholder="X5" />
+
+                <Label Text="MAC stampante (opzionale, consigliato)" />
+                <Entry x:Name="PrinterMacEntry" Placeholder="AA:BB:CC:DD:EE:FF" TextTransform="Uppercase" />
+
+                <Label Text="Protocollo: JL_SPP_RASTER" FontSize="12" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout x:Name="EthSection" Spacing="8" IsVisible="False">
+                <Label Text="Host / IP stampante" />
+                <Entry x:Name="HostEntry" Placeholder="192.168.1.100" Keyboard="Url" />
+
+                <Label Text="Porta TCP" />
+                <Entry x:Name="PortEntry" Placeholder="9100" Keyboard="Numeric" />
+
+                <Label Text="Protocollo: ESC/POS su TCP" FontSize="12" />
+            </VerticalStackLayout>
 
             <Button Text="Salva" Clicked="OnSaveClicked" />
+            <Button Text="Stampa di prova" Clicked="OnTestPrintClicked" />
         </VerticalStackLayout>
     </ScrollView>
 

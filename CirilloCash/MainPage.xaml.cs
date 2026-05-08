@@ -44,6 +44,7 @@ namespace CirilloCash
         double totalBill = 0;
         double totalMoney = 0;
         readonly ThermalPrinterService thermalPrinterService = new();
+        readonly EthernetPrinterService ethernetPrinterService = new();
         (string SerializedTransaction, string ReceiptText)? savedTransactionData;
 
         public MainPage()
@@ -246,7 +247,9 @@ namespace CirilloCash
                 return;
             }
 
-            if (!await EnsureBluetoothPermissionAsync())
+            var activePrinter = PrinterSettings.ActivePrinter;
+
+            if (activePrinter == ActivePrinter.X5 && !await EnsureBluetoothPermissionAsync())
             {
                 await DisplayAlert("Stampa", "Permesso Bluetooth negato. Abilita 'Dispositivi nelle vicinanze'.", "OK");
                 return;
@@ -260,10 +263,15 @@ namespace CirilloCash
                 return;
             }
 
-            var printResult = await thermalPrinterService.PrintAsync(
-                saveResult.ReceiptText,
-                PrinterSettings.PrinterNameHint,
-                PrinterSettings.PrinterMacAddress);
+            var printResult = activePrinter == ActivePrinter.Ethernet
+                ? await ethernetPrinterService.PrintAsync(
+                    saveResult.ReceiptText,
+                    PrinterSettings.EthernetHost,
+                    PrinterSettings.EthernetPort)
+                : await thermalPrinterService.PrintAsync(
+                    saveResult.ReceiptText,
+                    PrinterSettings.PrinterNameHint,
+                    PrinterSettings.PrinterMacAddress);
 
             if (printResult.Success)
             {
