@@ -1,162 +1,347 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CirilloCash.MainPage">
+    <ContentPage.Resources>
+        <Color x:Key="PageCream">#ECECEC</Color>
+        <Color x:Key="PageSand">#DDDDDD</Color>
+        <Color x:Key="CardIvory">#F8F8F8</Color>
+        <Color x:Key="CardPeach">#ECECEC</Color>
+        <Color x:Key="LineWarm">#BEBEBE</Color>
+        <Color x:Key="InkWarm">#1F1F1F</Color>
+        <Color x:Key="MutedWarm">#6B6B6B</Color>
+        <Color x:Key="AccentTerracotta">#3D3D3D</Color>
+        <Color x:Key="AccentTeal">#194C63</Color>
+        <Color x:Key="AccentGold">#F0CC3C</Color>
+        <Color x:Key="AccentBerry">#BDBDBD</Color>
+        <Color x:Key="AccentSoft">#D3D3D3</Color>
+        <Color x:Key="AccentMint">#BFE6FF</Color>
+        <Color x:Key="AccentButter">#F6DD69</Color>
 
+        <Style x:Key="SectionBorderStyle" TargetType="Border">
+            <Setter Property="Stroke" Value="{StaticResource LineWarm}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="BackgroundColor" Value="{StaticResource CardIvory}" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="StrokeShape">
+                <Setter.Value>
+                    <RoundRectangle CornerRadius="0" />
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-    <Grid Padding="5" RowSpacing="0" ColumnSpacing="0" BackgroundColor="Black">
+        <Style x:Key="SectionTitleStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource InkWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="LineBreakMode" Value="WordWrap" />
+        </Style>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Style x:Key="SectionCaptionStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource MutedWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
 
-        <!-- Grid Bevande e Conto -->
-        <Grid Grid.Row="0" Padding="5" RowSpacing="5" ColumnSpacing="5" BackgroundColor="Black">
+        <Style x:Key="DrinkButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource AccentSoft}" />
+            <Setter Property="TextColor" Value="{StaticResource InkWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="HeightRequest" Value="56" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal" />
+                        <VisualState Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#BBBBBB" />
+                                <Setter Property="Scale" Value="0.98" />
+                                <Setter Property="Opacity" Value="0.92" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <Style x:Key="RemoveDrinkButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource AccentBerry}" />
+            <Setter Property="TextColor" Value="{StaticResource InkWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="HeightRequest" Value="56" />
+            <Setter Property="WidthRequest" Value="62" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal" />
+                        <VisualState Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#A8A8A8" />
+                                <Setter Property="Scale" Value="0.97" />
+                                <Setter Property="Opacity" Value="0.9" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
 
-            <!-- Grid Bevande -->
-            <Grid Grid.Column="0" Padding="10" RowSpacing="10" ColumnSpacing="10">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <Style x:Key="MoneyButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource AccentMint}" />
+            <Setter Property="TextColor" Value="{StaticResource AccentTeal}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="HeightRequest" Value="52" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal" />
+                        <VisualState Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#9FD2F2" />
+                                <Setter Property="Scale" Value="0.98" />
+                                <Setter Property="Opacity" Value="0.92" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
 
-                <Button x:Name="AddBlondeBeerBtn" Text="Bionda" Grid.Row="0" Grid.Column="0" Clicked="OnAddBlondeBeerClicked"/>
-                <Button x:Name="RemoveBlondeBeerBtn" Text="  -  " Grid.Row="0" Grid.Column="1" Clicked="OnRemoveBlondeBeerClicked"/>
-                <Button x:Name="AddRedBeerBtn" Text="Rossa" Grid.Row="1" Grid.Column="0" Clicked="OnAddRedBeerClicked"/>
-                <Button x:Name="RemoveRedBeerBtn" Text="-" Grid.Row="1" Grid.Column="1" Clicked="OnRemoveRedBeerClicked"/>
-                <Button x:Name="AddSpritzBtn" Text="Spritz" Grid.Row="2" Grid.Column="0" Clicked="OnAddSpritzClicked"/>
-                <Button x:Name="RemoveSpritzBtn" Text="-" Grid.Row="2" Grid.Column="1" Clicked="OnRemoveSpritzClicked"/>
-                <Button x:Name="AddWaterBtn" Text="Acqua" Grid.Row="3" Grid.Column="0" Clicked="OnAddWaterClicked"/>
-                <Button x:Name="RemoveWaterBtn" Text="-" Grid.Row="3" Grid.Column="1" Clicked="OnRemoveWaterClicked"/>
-                <Button x:Name="AddSoftDrinkBtn" Text="Bibita" Grid.Row="4" Grid.Column="0" Clicked="OnAddSoftDrinkClicked"/>
-                <Button x:Name="RemoveSoftDrinkBtn" Text="-" Grid.Row="4" Grid.Column="1" Clicked="OnRemoveSoftDrinkClicked"/>
-                <Button x:Name="AddWaterMelonBtn" Text="Anguria" Grid.Row="5" Grid.Column="0" Clicked="OnAddWaterMelonClicked"/>
-                <Button x:Name="RemoveWaterMelonBtn" Text="-" Grid.Row="5" Grid.Column="1" Clicked="OnRemoveWaterMelonClicked"/>
-            </Grid>
+        <Style x:Key="ActionPrimaryButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource AccentGold}" />
+            <Setter Property="TextColor" Value="{StaticResource InkWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="HeightRequest" Value="56" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal" />
+                        <VisualState Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#D9B92F" />
+                                <Setter Property="Scale" Value="0.98" />
+                                <Setter Property="Opacity" Value="0.92" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
 
-            <!-- Grid Conto -->
-            <Grid x:Name="TotaleGrid" Grid.Column="1" Padding="10" RowSpacing="10" ColumnSpacing="20">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <Style x:Key="NeutralButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource AccentSoft}" />
+            <Setter Property="TextColor" Value="{StaticResource InkWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="HeightRequest" Value="56" />
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal" />
+                        <VisualState Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#BBBBBB" />
+                                <Setter Property="Scale" Value="0.98" />
+                                <Setter Property="Opacity" Value="0.92" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
 
-                <Label x:Name="Label00" Text="" Grid.Row="0" Grid.Column="0"/>
-                <Label x:Name="Label01" Text="" Grid.Row="0" Grid.Column="1"/>
-                <Label x:Name="Label02" Text="" Grid.Row="0" Grid.Column="2"/>
-                <Label x:Name="Label10" Text="" Grid.Row="1" Grid.Column="0"/>
-                <Label x:Name="Label11" Text="" Grid.Row="1" Grid.Column="1"/>
-                <Label x:Name="Label12" Text="" Grid.Row="1" Grid.Column="2"/>
-                <Label x:Name="Label20" Text="" Grid.Row="2" Grid.Column="0"/>
-                <Label x:Name="Label21" Text="" Grid.Row="2" Grid.Column="1"/>
-                <Label x:Name="Label22" Text="" Grid.Row="2" Grid.Column="2"/>
-                <Label x:Name="Label30" Text="" Grid.Row="3" Grid.Column="0"/>
-                <Label x:Name="Label31" Text="" Grid.Row="3" Grid.Column="1"/>
-                <Label x:Name="Label32" Text="" Grid.Row="3" Grid.Column="2"/>
-                <Label x:Name="Label40" Text="" Grid.Row="4" Grid.Column="0"/>
-                <Label x:Name="Label41" Text="" Grid.Row="4" Grid.Column="1"/>
-                <Label x:Name="Label42" Text="" Grid.Row="4" Grid.Column="2"/>
-                <Label x:Name="Label50" Text="" Grid.Row="5" Grid.Column="0"/>
-                <Label x:Name="Label51" Text="" Grid.Row="5" Grid.Column="1"/>
-                <Label x:Name="Label52" Text="" Grid.Row="5" Grid.Column="2"/>
-                <Label x:Name="Label60" Text="" Grid.Row="6" Grid.Column="0"/>
-                <Label x:Name="Label61" Text="" Grid.Row="6" Grid.Column="1"/>
-                <Label x:Name="Label62" Text="" Grid.Row="6" Grid.Column="2"/>
-                <Label x:Name="Label70" Text="" Grid.Row="7" Grid.Column="0"/>
-                <Label x:Name="Label71" Text="" Grid.Row="7" Grid.Column="1"/>
-                <Label x:Name="Label72" Text="" Grid.Row="7" Grid.Column="2"/>
-                <Label x:Name="Label80" Text="" Grid.Row="8" Grid.Column="0"/>
-                <Label x:Name="Label81" Text="" Grid.Row="8" Grid.Column="1"/>
-                <Label x:Name="Label82" Text="" Grid.Row="8" Grid.Column="2"/>
-            </Grid>
-        </Grid>
+        <Style x:Key="ReceiptLabelStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource InkWarm}" />
+            <Setter Property="FontFamily" Value="OpenSansRegular" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+            <Setter Property="LineBreakMode" Value="NoWrap" />
+        </Style>
 
+        <Style x:Key="ReceiptValueLabelStyle" TargetType="Label" BasedOn="{StaticResource ReceiptLabelStyle}">
+            <Setter Property="HorizontalTextAlignment" Value="End" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        </Style>
 
+        <Style x:Key="SummaryLabelStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource AccentTeal}" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="VerticalTextAlignment" Value="Center" />
+        </Style>
+    </ContentPage.Resources>
 
-        <!-- Grid Resto -->
-        <Grid x:Name="RestoGrid" Grid.Row="1" Padding="10" RowSpacing="10" ColumnSpacing="20" BackgroundColor="Black">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+    <ContentPage.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="{StaticResource PageCream}" Offset="0.0" />
+            <GradientStop Color="{StaticResource PageSand}" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
 
-            <Button x:Name="M100" Text="100 €" Grid.Row="0" Grid.Column="0" Clicked="OnM100Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M50" Text="50 €" Grid.Row="1" Grid.Column="0" Clicked="OnM50Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M20" Text="20 €" Grid.Row="2" Grid.Column="0" Clicked="OnM20Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M10" Text="10 €" Grid.Row="4" Grid.Column="0" Clicked="OnM10Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M5" Text="5 €" Grid.Row="0" Grid.Column="1" Clicked="OnM5Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M2" Text="2 €" Grid.Row="1" Grid.Column="1" Clicked="OnM2Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M1" Text="1 €" Grid.Row="2" Grid.Column="1" Clicked="OnM1Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="M05" Text="0.50 €" Grid.Row="3" Grid.Column="1" Clicked="OnM05Clicked" BackgroundColor="LightSeaGreen"/>
-            <Button x:Name="CleanMoneyBtn" Text="Azzera" Grid.Row="0" Grid.Column="2" Clicked="OnCleanMoneyClicked"/>
-            <Button x:Name="ComputeRemainderBtn" Text="Calcola Resto" Grid.Row="1" Grid.Column="3" Clicked="OnComputeReminderClicked"/>
-            <Label x:Name="MoneyLb" Text="" Grid.Row="2" Grid.Column="3"/>
-            <Label x:Name="ReminderLb" Text="" Grid.Row="3" Grid.Column="3"/>
-        </Grid>
+    <ScrollView>
+        <VerticalStackLayout Padding="16,16,16,22" Spacing="12">
+            <VerticalStackLayout Spacing="2" Padding="2,0,2,4">
+                <Label Text="Cirillo Cash" TextColor="{StaticResource InkWarm}" FontFamily="OpenSansSemibold" FontSize="28" />
+                <Label Text="Cassa bevande" TextColor="{StaticResource MutedWarm}" FontFamily="OpenSansRegular" FontSize="14" />
+                <BoxView HeightRequest="2" WidthRequest="72" HorizontalOptions="Start" BackgroundColor="{StaticResource AccentGold}" Margin="0,8,0,0" />
+            </VerticalStackLayout>
 
-        <!-- Grid Utility -->
-        <Grid x:Name="UtilityGrid" Grid.Row="2" Padding="10" RowSpacing="10" ColumnSpacing="20" BackgroundColor="Black">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource SectionBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Ordine" Style="{StaticResource SectionTitleStyle}" />
+                        <Label Text="Aggiungi o rimuovi articoli." Style="{StaticResource SectionCaptionStyle}" />
+                    </VerticalStackLayout>
 
-            <Button x:Name="CleanBtn" Text="Pulisci" Grid.Row="0" Grid.Column="0" Clicked="OnCleanClicked" BackgroundColor="Yellow"/>
-            <Button x:Name="SaveBtn" Text="Salva" Grid.Row="0" Grid.Column="1" Clicked="OnSaveClicked" BackgroundColor="Yellow"/>
-            <Button x:Name="PrintBtn" Text="Stampa" Grid.Row="0" Grid.Column="2" Clicked="OnPrintClicked" BackgroundColor="Yellow"/>
-        </Grid>
-    </Grid>
+                    <Grid ColumnDefinitions="*,62" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                        <Button x:Name="AddBlondeBeerBtn" Text="Bionda" Grid.Row="0" Grid.Column="0" Clicked="OnAddBlondeBeerClicked" Style="{StaticResource DrinkButtonStyle}" />
+                        <Button x:Name="RemoveBlondeBeerBtn" Text="-" Grid.Row="0" Grid.Column="1" Clicked="OnRemoveBlondeBeerClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
 
+                        <Button x:Name="AddRedBeerBtn" Text="Rossa" Grid.Row="1" Grid.Column="0" Clicked="OnAddRedBeerClicked" Style="{StaticResource DrinkButtonStyle}" />
+                        <Button x:Name="RemoveRedBeerBtn" Text="-" Grid.Row="1" Grid.Column="1" Clicked="OnRemoveRedBeerClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
+
+                        <Button x:Name="AddSpritzBtn" Text="Spritz" Grid.Row="2" Grid.Column="0" Clicked="OnAddSpritzClicked" Style="{StaticResource DrinkButtonStyle}" />
+                        <Button x:Name="RemoveSpritzBtn" Text="-" Grid.Row="2" Grid.Column="1" Clicked="OnRemoveSpritzClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
+
+                        <Button x:Name="AddWaterBtn" Text="Acqua" Grid.Row="3" Grid.Column="0" Clicked="OnAddWaterClicked" Style="{StaticResource DrinkButtonStyle}" />
+                        <Button x:Name="RemoveWaterBtn" Text="-" Grid.Row="3" Grid.Column="1" Clicked="OnRemoveWaterClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
+
+                        <Button x:Name="AddSoftDrinkBtn" Text="Bibita" Grid.Row="4" Grid.Column="0" Clicked="OnAddSoftDrinkClicked" Style="{StaticResource DrinkButtonStyle}" />
+                        <Button x:Name="RemoveSoftDrinkBtn" Text="-" Grid.Row="4" Grid.Column="1" Clicked="OnRemoveSoftDrinkClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
+
+                        <Button x:Name="AddWaterMelonBtn" Text="Anguria" Grid.Row="5" Grid.Column="0" Clicked="OnAddWaterMelonClicked" Style="{StaticResource DrinkButtonStyle}" />
+                        <Button x:Name="RemoveWaterMelonBtn" Text="-" Grid.Row="5" Grid.Column="1" Clicked="OnRemoveWaterMelonClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource SectionBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Conto" Style="{StaticResource SectionTitleStyle}" />
+                        <Label Text="Riepilogo e totale." Style="{StaticResource SectionCaptionStyle}" />
+                    </VerticalStackLayout>
+
+                    <Border BackgroundColor="#F1F1F1" Stroke="{StaticResource LineWarm}" Padding="10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="0" />
+                        </Border.StrokeShape>
+                        <Grid x:Name="TotaleGrid" RowSpacing="6" ColumnSpacing="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label x:Name="Label00" Grid.Row="0" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label01" Grid.Row="0" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label02" Grid.Row="0" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label10" Grid.Row="1" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label11" Grid.Row="1" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label12" Grid.Row="1" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label20" Grid.Row="2" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label21" Grid.Row="2" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label22" Grid.Row="2" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label30" Grid.Row="3" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label31" Grid.Row="3" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label32" Grid.Row="3" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label40" Grid.Row="4" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label41" Grid.Row="4" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label42" Grid.Row="4" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label50" Grid.Row="5" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label51" Grid.Row="5" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label52" Grid.Row="5" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label60" Grid.Row="6" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label61" Grid.Row="6" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label62" Grid.Row="6" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label70" Grid.Row="7" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label71" Grid.Row="7" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label72" Grid.Row="7" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label80" Grid.Row="8" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
+                            <Label x:Name="Label81" Grid.Row="8" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
+                            <Label x:Name="Label82" Grid.Row="8" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource SectionBorderStyle}">
+                <VerticalStackLayout x:Name="RestoGrid" Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Pagamento e Resto" Style="{StaticResource SectionTitleStyle}" />
+                        <Label Text="Contanti e resto." Style="{StaticResource SectionCaptionStyle}" />
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Border BackgroundColor="#F1F1F1" Padding="10" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="0" />
+                            </Border.StrokeShape>
+                            <Label x:Name="MoneyLb" Text="" Style="{StaticResource SummaryLabelStyle}" />
+                        </Border>
+                        <Border Grid.Column="1" BackgroundColor="#F1F1F1" Padding="10" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="0" />
+                            </Border.StrokeShape>
+                            <Label x:Name="ReminderLb" Text="" Style="{StaticResource SummaryLabelStyle}" TextColor="{StaticResource AccentTeal}" />
+                        </Border>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                        <Button x:Name="M100" Text="100 €" Grid.Row="0" Grid.Column="0" Clicked="OnM100Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M50" Text="50 €" Grid.Row="0" Grid.Column="1" Clicked="OnM50Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M20" Text="20 €" Grid.Row="0" Grid.Column="2" Clicked="OnM20Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M10" Text="10 €" Grid.Row="0" Grid.Column="3" Clicked="OnM10Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M5" Text="5 €" Grid.Row="1" Grid.Column="0" Clicked="OnM5Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M2" Text="2 €" Grid.Row="1" Grid.Column="1" Clicked="OnM2Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M1" Text="1 €" Grid.Row="1" Grid.Column="2" Clicked="OnM1Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                        <Button x:Name="M05" Text="0,50 €" Grid.Row="1" Grid.Column="3" Clicked="OnM05Clicked" Style="{StaticResource MoneyButtonStyle}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button x:Name="CleanMoneyBtn" Text="Azzera" Grid.Column="0" Clicked="OnCleanMoneyClicked" Style="{StaticResource NeutralButtonStyle}" />
+                        <Button x:Name="ComputeRemainderBtn" Text="Calcola resto" Grid.Column="1" Clicked="OnComputeReminderClicked" Style="{StaticResource NeutralButtonStyle}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource SectionBorderStyle}">
+                <VerticalStackLayout x:Name="UtilityGrid" Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Azioni" Style="{StaticResource SectionTitleStyle}" />
+                        <Label Text="Gestione operazioni." Style="{StaticResource SectionCaptionStyle}" />
+                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Button x:Name="CleanBtn" Text="Pulisci" Grid.Column="0" Clicked="OnCleanClicked" Style="{StaticResource ActionPrimaryButtonStyle}" />
+                        <Button x:Name="SaveBtn" Text="Salva" Grid.Column="1" Clicked="OnSaveClicked" Style="{StaticResource ActionPrimaryButtonStyle}" />
+                        <Button x:Name="PrintBtn" Text="Stampa" Grid.Column="2" Clicked="OnPrintClicked" Style="{StaticResource ActionPrimaryButtonStyle}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

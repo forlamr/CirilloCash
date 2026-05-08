@@ -44,6 +44,7 @@ namespace CirilloCash
         double totalBill = 0;
         double totalMoney = 0;
         readonly ThermalPrinterService thermalPrinterService = new();
+        (string SerializedTransaction, string ReceiptText)? savedTransactionData;
 
         public MainPage()
         {
@@ -226,28 +227,12 @@ namespace CirilloCash
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
-            if (!drinks.Any() || totalBill <= 0)
+            var saveResult = await TrySaveCurrentTransactionAsync(
+                "Salvataggio",
+                "Nessuna transazione da salvare.");
+            if (!saveResult.Success)
             {
-                await DisplayAlert("Salvataggio", "Nessuna transazione da salvare.", "OK");
                 return;
-            }
-
-            if (!await EnsureBluetoothPermissionAsync())
-            {
-                await DisplayAlert("Stampa", "Permesso Bluetooth negato. Abilita 'Dispositivi nelle vicinanze'.", "OK");
-                return;
-            }
-
-            var transactionData = BuildTransactionData();
-            await AppendTextToDownloadAsync("transazioni.txt", transactionData.SerializedTransaction);
-
-            var printResult = await thermalPrinterService.PrintAsync(
-                transactionData.ReceiptText,
-                PrinterSettings.PrinterNameHint,
-                PrinterSettings.PrinterMacAddress);
-            if (!printResult.Success)
-            {
-                await DisplayAlert("Stampa", printResult.Message, "OK");
             }
 
             CleanBill();
@@ -255,7 +240,7 @@ namespace CirilloCash
 
         private async void OnPrintClicked(object sender, EventArgs e)
         {
-            if (!drinks.Any() || totalBill <= 0)
+            if (!HasPendingTransaction())
             {
                 await DisplayAlert("Stampa", "Nessun conto da stampare.", "OK");
                 return;
@@ -267,11 +252,30 @@ namespace CirilloCash
                 return;
             }
 
-            var transactionData = BuildTransactionData();
+            var saveResult = await TrySaveCurrentTransactionAsync(
+                "Stampa",
+                "Nessun conto da stampare.");
+            if (!saveResult.Success)
+            {
+                return;
+            }
+
             var printResult = await thermalPrinterService.PrintAsync(
-                transactionData.ReceiptText,
+                saveResult.ReceiptText,
                 PrinterSettings.PrinterNameHint,
                 PrinterSettings.PrinterMacAddress);
+
+            if (printResult.Success)
+            {
+                CleanBill();
+            }
+            else
+            {
+                printResult = printResult with
+                {
+                    Message = $"Transazione salvata, ma la stampa non e riuscita: {printResult.Message}"
+                };
+            }
 
             await DisplayAlert("Stampa", printResult.Message, "OK");
         }
@@ -331,14 +335,50 @@ namespace CirilloCash
 #endif
         }
 
+        private bool HasPendingTransaction()
+        {
+            return drinks.Any() && totalBill > 0;
+        }
+
+        private async Task<(bool Success, string ReceiptText)> TrySaveCurrentTransactionAsync(
+            string emptyAlertTitle,
+            string emptyAlertMessage)
+        {
+            if (!HasPendingTransaction())
+            {
+                await DisplayAlert(emptyAlertTitle, emptyAlertMessage, "OK");
+                return (false, string.Empty);
+            }
+
+            if (savedTransactionData.HasValue)
+            {
+                return (true, savedTransactionData.Value.ReceiptText);
+            }
+
+            try
+            {
+                var transactionData = BuildTransactionData();
+                await AppendTextToDownloadAsync("transazioni.txt", transactionData.SerializedTransaction);
+                savedTransactionData = transactionData;
+                return (true, transactionData.ReceiptText);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Salvataggio", $"Errore durante il salvataggio della transazione: {ex.Message}", "OK");
+                return (false, string.Empty);
+            }
+        }
+
         private (string SerializedTransaction, string ReceiptText) BuildTransactionData()
         {
             var transactionBuilder = new StringBuilder();
             var receiptBuilder = new StringBuilder();
+            var timestamp = DateTime.Now;
 
             double total = 0;
-            transactionBuilder.Append($"DATA={DateTime.Now:yyyy-MM-dd HH:mm:ss};");
-            receiptBuilder.AppendLine("BIBITE ACQUISTATE");
+            transactionBuilder.Append($"DATA={timestamp:yyyy-MM-dd HH:mm:ss};");
+            receiptBuilder.AppendLine(CenterReceiptLine("POLO ZEROSEI"));
+            receiptBuilder.AppendLine(CenterReceiptLine("DON CIRILLO PIZIO"));
             receiptBuilder.AppendLine("------------------------------");
 
             var dtValues = Enum.GetValues<DrinkType>();
@@ -357,12 +397,31 @@ namespace CirilloCash
 
             transactionBuilder.Append($"TOTALE={total:0.00}");
             receiptBuilder.AppendLine("------------------------------");
+            receiptBuilder.AppendLine(CenterReceiptLine(timestamp.ToString("yyyy-MM-dd HH:mm:ss")));
+
+            for (var i = 0; i < 3; i++)
+            {
+                receiptBuilder.AppendLine();
+            }
 
             return (transactionBuilder.ToString(), receiptBuilder.ToString());
         }
 
+        private static string CenterReceiptLine(string text, int width = 30)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text.Length >= width)
+            {
+                return text;
+            }
+
+            var leftPadding = (width - text.Length) / 2;
+            return new string(' ', leftPadding) + text;
+        }
+
         public void UpdateBill()
         {
+            savedTransactionData = null;
+
             foreach (var label in labelGrid)
             {
                 label.Text = string.Empty;
@@ -397,6 +456,7 @@ namespace CirilloCash
         public void CleanBill()
         {
             drinks = new Dictionary<DrinkType, int>();
+            savedTransactionData = null;
 
             foreach (var label in labelGrid)
             {

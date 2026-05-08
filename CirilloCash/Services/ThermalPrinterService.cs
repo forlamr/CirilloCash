@@ -388,9 +388,16 @@ public sealed class ThermalPrinterService
 
     private static string[] GetPrintableLines(string text)
     {
-        return PreparePrinterText(text)
+        var lines = PreparePrinterText(text)
             .Replace("\r\n", "\n")
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            .Split('\n', StringSplitOptions.None);
+
+        if (lines.Length > 0 && lines[^1].Length == 0)
+        {
+            return lines.Take(lines.Length - 1).ToArray();
+        }
+
+        return lines;
     }
 
     private static string PreparePrinterText(string text)
