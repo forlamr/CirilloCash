@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CirilloCash.CatalogPage"
+             Title="Catalogo">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="8">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Button Grid.Column="0" x:Name="DrinksTabBtn" Text="DRINK" Clicked="OnDrinksTabClicked" />
+            <Button Grid.Column="1" x:Name="FoodTabBtn"   Text="FOOD"  Clicked="OnFoodTabClicked" />
+        </Grid>
+
+        <CollectionView Grid.Row="1" x:Name="ItemsView">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="6" ColumnDefinitions="*,90,Auto,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" FontSize="16" />
+                        <Label Grid.Column="1" Text="{Binding Price, StringFormat='{0:0.00} €'}" VerticalOptions="Center" HorizontalTextAlignment="End" />
+                        <Button Grid.Column="2" Text="Modifica" Clicked="OnEditClicked" CommandParameter="{Binding Id}" />
+                        <Button Grid.Column="3" Text="Elimina"  Clicked="OnDeleteClicked" CommandParameter="{Binding Id}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="Nessun articolo. Tocca 'Aggiungi' per iniziare." HorizontalTextAlignment="Center" Padding="20" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <Button Grid.Row="2" Text="Aggiungi articolo" Clicked="OnAddClicked" />
+    </Grid>
+
+</ContentPage>

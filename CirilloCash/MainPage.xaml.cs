@@ -1,236 +1,112 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CirilloCash.Services;
-#if ANDROID
-using Android.Content;
-using Android.Provider;
-#endif
 
 namespace CirilloCash
 {
     public partial class MainPage : ContentPage
     {
-        public enum DrinkType
-        {
-            [Description("Bionda")]
-            BlondeBeer,
-            [Description("Rossa")]
-            RedBeer,
-            [Description("Spritz")]
-            Spritz,
-            [Description("Acqua")]
-            Water,
-            [Description("Bibita")]
-            SoftDrink,
-            [Description("Anguria")]
-            WarterMelon
-        }
+        private readonly ThermalPrinterService thermalPrinterService = new();
+        private readonly EthernetPrinterService ethernetPrinterService = new();
 
-        Label[,] labelGrid;
+        private readonly ObservableCollection<OrderItemRow> orderRows = new();
+        private readonly ObservableCollection<BillItemRow> drinkBillRows = new();
+        private readonly ObservableCollection<BillItemRow> foodBillRows = new();
+        private readonly Dictionary<string, OrderItemRow> rowsById = new();
 
-        Dictionary<DrinkType, int> drinks = new();
-
-        Dictionary<DrinkType, double> prices = new()
-        {
-            { DrinkType.BlondeBeer , 4 },
-            { DrinkType.RedBeer, 4.5 },
-            { DrinkType.Spritz, 4 },
-            { DrinkType.Water, 1 },
-            { DrinkType.SoftDrink, 2 },
-            { DrinkType.WarterMelon, 3 }
-        };
-
-        double totalBill = 0;
-        double totalMoney = 0;
-        readonly ThermalPrinterService thermalPrinterService = new();
-        readonly EthernetPrinterService ethernetPrinterService = new();
-        (string SerializedTransaction, string ReceiptText)? savedTransactionData;
+        private MenuCategory currentCategory = MenuCategory.Drink;
+        private double totalBill;
+        private double totalMoney;
+        private (string SerializedTransaction, string ReceiptText)? savedTransactionData;
 
         public MainPage()
         {
             InitializeComponent();
-            labelGrid = new Label[9, 3]
-            {
-                { Label00, Label01, Label02 },
-                { Label10, Label11, Label12 },
-                { Label20, Label21, Label22 },
-                { Label30, Label31, Label32 },
-                { Label40, Label41, Label42 },
-                { Label50, Label51, Label52 },
-                { Label60, Label61, Label62 },
-                { Label70, Label71, Label72 },
-                { Label80, Label81, Label82 }
-            };
+            DrinkBillView.ItemsSource = drinkBillRows;
+            FoodBillView.ItemsSource = foodBillRows;
+            OrderItemsView.ItemsSource = orderRows;
         }
 
-        private void OnAddBlondeBeerClicked(object sender, EventArgs e)
+        protected override void OnAppearing()
         {
-            if (drinks.ContainsKey(DrinkType.BlondeBeer))
-            {
-                drinks[DrinkType.BlondeBeer]++;
-            }
-            else
-            {
-                drinks.Add(DrinkType.BlondeBeer, 1);
-            }
-
+            base.OnAppearing();
+            ReloadCatalog();
+            UpdateTabHighlight();
             UpdateBill();
         }
-        private void OnRemoveBlondeBeerClicked(object sender, EventArgs e)
+
+        private void ReloadCatalog()
         {
-            if (drinks.ContainsKey(DrinkType.BlondeBeer) && drinks[DrinkType.BlondeBeer] > 0)
+            var existingQuantities = rowsById.Values.ToDictionary(r => r.Id, r => r.Quantity);
+
+            orderRows.Clear();
+            rowsById.Clear();
+
+            var items = CatalogService.Instance.GetByCategory(currentCategory);
+            foreach (var item in items)
             {
-                drinks[DrinkType.BlondeBeer]--;
-                if (drinks[DrinkType.BlondeBeer] == 0)
+                existingQuantities.TryGetValue(item.Id, out var qty);
+                var row = new OrderItemRow(item) { Quantity = qty };
+                orderRows.Add(row);
+                rowsById[row.Id] = row;
+            }
+
+            foreach (var billRow in drinkBillRows.Concat(foodBillRows))
+            {
+                if (!rowsById.ContainsKey(billRow.Id))
                 {
-                    drinks.Remove(DrinkType.BlondeBeer);
+                    rowsById[billRow.Id] = new OrderItemRow(billRow.Snapshot()) { Quantity = billRow.Quantity };
                 }
             }
-
-            UpdateBill();
         }
-        private void OnAddRedBeerClicked(object sender, EventArgs e)
+
+        private void OnDrinksTabClicked(object sender, EventArgs e)
         {
-            if (drinks.ContainsKey(DrinkType.RedBeer))
-            {
-                drinks[DrinkType.RedBeer]++;
-            }
-            else
-            {
-                drinks.Add(DrinkType.RedBeer, 1);
-            }
-
-            UpdateBill();
+            currentCategory = MenuCategory.Drink;
+            ReloadCatalog();
+            UpdateTabHighlight();
         }
-        private void OnRemoveRedBeerClicked(object sender, EventArgs e)
+
+        private void OnFoodTabClicked(object sender, EventArgs e)
         {
-            if (drinks.ContainsKey(DrinkType.RedBeer) && drinks[DrinkType.RedBeer] > 0)
-            {
-                drinks[DrinkType.RedBeer]--;
-                if (drinks[DrinkType.RedBeer] == 0)
-                {
-                    drinks.Remove(DrinkType.RedBeer);
-                }
-            }
-
-            UpdateBill();
+            currentCategory = MenuCategory.Food;
+            ReloadCatalog();
+            UpdateTabHighlight();
         }
-        private void OnAddSpritzClicked(object sender, EventArgs e)
+
+        private void UpdateTabHighlight()
         {
-            if (drinks.ContainsKey(DrinkType.Spritz))
-            {
-                drinks[DrinkType.Spritz]++;
-            }
-            else
-            {
-                drinks.Add(DrinkType.Spritz, 1);
-            }
-
-            UpdateBill();
+            DrinksTabBtn.FontAttributes = currentCategory == MenuCategory.Drink ? FontAttributes.Bold : FontAttributes.None;
+            FoodTabBtn.FontAttributes   = currentCategory == MenuCategory.Food  ? FontAttributes.Bold : FontAttributes.None;
         }
-        private void OnRemoveSpritzClicked(object sender, EventArgs e)
+
+        private void OnAddItemClicked(object sender, EventArgs e)
         {
-            if (drinks.ContainsKey(DrinkType.Spritz) && drinks[DrinkType.Spritz] > 0)
+            if (sender is Button btn && btn.CommandParameter is string id && rowsById.TryGetValue(id, out var row))
             {
-                drinks[DrinkType.Spritz]--;
-                if (drinks[DrinkType.Spritz] == 0)
-                {
-                    drinks.Remove(DrinkType.Spritz);
-                }
+                row.Quantity++;
+                UpdateBill();
             }
-
-            UpdateBill();
         }
-        private void OnAddWaterClicked(object sender, EventArgs e)
+
+        private void OnRemoveItemClicked(object sender, EventArgs e)
         {
-            if (drinks.ContainsKey(DrinkType.Water))
+            if (sender is Button btn && btn.CommandParameter is string id && rowsById.TryGetValue(id, out var row) && row.Quantity > 0)
             {
-                drinks[DrinkType.Water]++;
+                row.Quantity--;
+                UpdateBill();
             }
-            else
-            {
-                drinks.Add(DrinkType.Water, 1);
-            }
-
-            UpdateBill();
-        }
-        private void OnRemoveWaterClicked(object sender, EventArgs e)
-        {
-            if (drinks.ContainsKey(DrinkType.Water) && drinks[DrinkType.Water] > 0)
-            {
-                drinks[DrinkType.Water]--;
-                if (drinks[DrinkType.Water] == 0)
-                {
-                    drinks.Remove(DrinkType.Water);
-                }
-            }
-
-            UpdateBill();
-        }
-        private void OnAddSoftDrinkClicked(object sender, EventArgs e)
-        {
-            if (drinks.ContainsKey(DrinkType.SoftDrink))
-            {
-                drinks[DrinkType.SoftDrink]++;
-            }
-            else
-            {
-                drinks.Add(DrinkType.SoftDrink, 1);
-            }
-
-            UpdateBill();
-        }
-        private void OnRemoveSoftDrinkClicked(object sender, EventArgs e)
-        {
-            if (drinks.ContainsKey(DrinkType.SoftDrink) && drinks[DrinkType.SoftDrink] > 0)
-            {
-                drinks[DrinkType.SoftDrink]--;
-                if (drinks[DrinkType.SoftDrink] == 0)
-                {
-                    drinks.Remove(DrinkType.SoftDrink);
-                }
-            }
-
-            UpdateBill();
-        }
-        private void OnAddWaterMelonClicked(object sender, EventArgs e)
-        {
-            if (drinks.ContainsKey(DrinkType.WarterMelon))
-            {
-                drinks[DrinkType.WarterMelon]++;
-            }
-            else
-            {
-                drinks.Add(DrinkType.WarterMelon, 1);
-            }
-
-            UpdateBill();
-        }
-        private void OnRemoveWaterMelonClicked(object sender, EventArgs e)
-        {
-            if (drinks.ContainsKey(DrinkType.WarterMelon) && drinks[DrinkType.WarterMelon] > 0)
-            {
-                drinks[DrinkType.WarterMelon]--;
-                if (drinks[DrinkType.WarterMelon] == 0)
-                {
-                    drinks.Remove(DrinkType.WarterMelon);
-                }
-            }
-
-            UpdateBill();
         }
 
-        private void OnCleanClicked(object sender, EventArgs e)
-        {
-            CleanBill();
-        }
+        private void OnCleanClicked(object sender, EventArgs e) => CleanBill();
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
-            var saveResult = await TrySaveCurrentTransactionAsync(
-                "Salvataggio",
-                "Nessuna transazione da salvare.");
+            var saveResult = await TrySaveCurrentTransactionAsync("Salvataggio", "Nessuna transazione da salvare.");
             if (!saveResult.Success)
             {
                 return;
@@ -255,23 +131,24 @@ namespace CirilloCash
                 return;
             }
 
-            var saveResult = await TrySaveCurrentTransactionAsync(
-                "Stampa",
-                "Nessun conto da stampare.");
+            var saveResult = await TrySaveCurrentTransactionAsync("Stampa", "Nessun conto da stampare.");
             if (!saveResult.Success)
             {
                 return;
             }
 
-            var printResult = activePrinter == ActivePrinter.Ethernet
-                ? await ethernetPrinterService.PrintAsync(
-                    saveResult.ReceiptText,
-                    PrinterSettings.EthernetHost,
-                    PrinterSettings.EthernetPort)
-                : await thermalPrinterService.PrintAsync(
+            PrinterResult printResult;
+            if (activePrinter == ActivePrinter.Ethernet)
+            {
+                printResult = await PrintEthernetReceiptsAsync();
+            }
+            else
+            {
+                printResult = await thermalPrinterService.PrintAsync(
                     saveResult.ReceiptText,
                     PrinterSettings.PrinterNameHint,
                     PrinterSettings.PrinterMacAddress);
+            }
 
             if (printResult.Success)
             {
@@ -286,6 +163,35 @@ namespace CirilloCash
             }
 
             await DisplayAlert("Stampa", printResult.Message, "OK");
+        }
+
+        private async Task<PrinterResult> PrintEthernetReceiptsAsync()
+        {
+            var host = PrinterSettings.EthernetHost;
+            var port = PrinterSettings.EthernetPort;
+            var timestamp = DateTime.Now;
+            var docs = new List<ReceiptDocument>();
+            var labels = new List<string>();
+
+            if (drinkBillRows.Count > 0)
+            {
+                docs.Add(BuildReceiptDocument(drinkBillRows, "DRINK", timestamp));
+                labels.Add("DRINK");
+            }
+
+            if (foodBillRows.Count > 0)
+            {
+                docs.Add(BuildReceiptDocument(foodBillRows, "FOOD", timestamp));
+                labels.Add("FOOD");
+            }
+
+            var result = await ethernetPrinterService.PrintReceiptsAsync(docs, host, port);
+            if (result.Success)
+            {
+                return PrinterResult.Ok($"Scontrini inviati: {string.Join(" + ", labels)}.");
+            }
+
+            return result;
         }
 
         private static async Task<bool> EnsureBluetoothPermissionAsync()
@@ -304,53 +210,9 @@ namespace CirilloCash
 #endif
         }
 
-        public async Task AppendTextToDownloadAsync(string fileName, string text)
-        {
-#if ANDROID
-            var resolver = Platform.CurrentActivity.ContentResolver;
+        private bool HasPendingTransaction() => (drinkBillRows.Count + foodBillRows.Count) > 0 && totalBill > 0;
 
-            // Check if the file already exists
-            string selection = $"{MediaStore.Downloads.InterfaceConsts.DisplayName}=?";
-            string[] selectionArgs = { fileName };
-            var cursor = resolver.Query(MediaStore.Downloads.ExternalContentUri, null, selection, selectionArgs, null);
-
-            Android.Net.Uri fileUri = null;
-            if (cursor != null && cursor.MoveToFirst())
-            {
-                int idCol = cursor.GetColumnIndexOrThrow(MediaStore.Downloads.InterfaceConsts.Id);
-                long id = cursor.GetLong(idCol);
-                fileUri = ContentUris.WithAppendedId(MediaStore.Downloads.ExternalContentUri, id);
-                cursor.Close();
-            }
-
-            // If not found, create a new file
-            if (fileUri == null)
-            {
-                var values = new ContentValues();
-                values.Put(MediaStore.Downloads.InterfaceConsts.DisplayName, fileName);
-                values.Put(MediaStore.Downloads.InterfaceConsts.MimeType, "text/plain");
-                values.Put(MediaStore.IMediaColumns.RelativePath, Android.OS.Environment.DirectoryDownloads);
-                fileUri = resolver.Insert(MediaStore.Downloads.ExternalContentUri, values);
-            }
-
-            // Open the file for writing
-            if (fileUri != null)
-            {
-                using var stream = resolver.OpenOutputStream(fileUri, "wa"); // "wa" = write+append
-                using var writer = new StreamWriter(stream);
-                await writer.WriteLineAsync(text);
-            }
-#endif
-        }
-
-        private bool HasPendingTransaction()
-        {
-            return drinks.Any() && totalBill > 0;
-        }
-
-        private async Task<(bool Success, string ReceiptText)> TrySaveCurrentTransactionAsync(
-            string emptyAlertTitle,
-            string emptyAlertMessage)
+        private async Task<(bool Success, string ReceiptText)> TrySaveCurrentTransactionAsync(string emptyAlertTitle, string emptyAlertMessage)
         {
             if (!HasPendingTransaction())
             {
@@ -366,7 +228,7 @@ namespace CirilloCash
             try
             {
                 var transactionData = BuildTransactionData();
-                await AppendTextToDownloadAsync("transazioni.txt", transactionData.SerializedTransaction);
+                await TransactionsStorage.AppendLineAsync(transactionData.SerializedTransaction);
                 savedTransactionData = transactionData;
                 return (true, transactionData.ReceiptText);
             }
@@ -379,41 +241,71 @@ namespace CirilloCash
 
         private (string SerializedTransaction, string ReceiptText) BuildTransactionData()
         {
-            var transactionBuilder = new StringBuilder();
-            var receiptBuilder = new StringBuilder();
+            var allRows = drinkBillRows.Concat(foodBillRows).ToList();
             var timestamp = DateTime.Now;
 
-            double total = 0;
+            var transactionBuilder = new StringBuilder();
             transactionBuilder.Append($"DATA={timestamp:yyyy-MM-dd HH:mm:ss};");
-            receiptBuilder.AppendLine(CenterReceiptLine("POLO ZEROSEI"));
-            receiptBuilder.AppendLine(CenterReceiptLine("DON CIRILLO PIZIO"));
-            receiptBuilder.AppendLine("------------------------------");
-
-            var dtValues = Enum.GetValues<DrinkType>();
-            foreach (var dt in dtValues)
+            double total = 0;
+            foreach (var row in allRows)
             {
-                drinks.TryGetValue(dt, out int quantity);
-                var drinkTotal = quantity * prices[dt];
-                total += drinkTotal;
+                transactionBuilder.Append($"{row.Name}={row.Quantity};");
+                total += row.LineTotal;
+            }
+            transactionBuilder.Append(string.Create(CultureInfo.InvariantCulture, $"TOTALE={total:0.00}"));
 
-                transactionBuilder.Append($"{dt.ToDescription()}={quantity};");
-                if (quantity > 0)
-                {
-                    receiptBuilder.AppendLine($"{dt.ToDescription(),-12}{quantity,3}");
-                }
+            var receipt = BuildReceiptText(allRows, timestamp, sectionLabel: null);
+            return (transactionBuilder.ToString(), receipt);
+        }
+
+        private static ReceiptDocument BuildReceiptDocument(IEnumerable<BillItemRow> rows, string sectionLabel, DateTime timestamp)
+        {
+            var items = rows
+                .Select(r => new ReceiptLineItem(r.Name, r.Quantity, r.Price, r.LineTotal))
+                .ToList();
+
+            return new ReceiptDocument
+            {
+                Title = "POLO ZEROSEI",
+                Subtitle = "DON CIRILLO PIZIO",
+                SectionLabel = sectionLabel,
+                Items = items,
+                Total = items.Sum(i => i.LineTotal),
+                Timestamp = timestamp
+            };
+        }
+
+        private static string BuildReceiptText(IReadOnlyCollection<BillItemRow> rows, DateTime timestamp, string? sectionLabel)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(CenterReceiptLine("POLO ZEROSEI"));
+            sb.AppendLine(CenterReceiptLine("DON CIRILLO PIZIO"));
+            if (!string.IsNullOrEmpty(sectionLabel))
+            {
+                sb.AppendLine(CenterReceiptLine(sectionLabel));
+            }
+            sb.AppendLine("------------------------------");
+
+            double total = 0;
+            foreach (var row in rows)
+            {
+                sb.AppendLine($"{Truncate(row.Name, 12),-12}{row.Quantity,3}");
+                total += row.LineTotal;
             }
 
-            transactionBuilder.Append($"TOTALE={total:0.00}");
-            receiptBuilder.AppendLine("------------------------------");
-            receiptBuilder.AppendLine(CenterReceiptLine(timestamp.ToString("yyyy-MM-dd HH:mm:ss")));
+            sb.AppendLine("------------------------------");
+            sb.AppendLine(CenterReceiptLine($"TOTALE {total:0.00} EUR"));
+            sb.AppendLine(CenterReceiptLine(timestamp.ToString("yyyy-MM-dd HH:mm:ss")));
 
             for (var i = 0; i < 3; i++)
             {
-                receiptBuilder.AppendLine();
+                sb.AppendLine();
             }
 
-            return (transactionBuilder.ToString(), receiptBuilder.ToString());
+            return sb.ToString();
         }
+
+        private static string Truncate(string text, int max) => text.Length <= max ? text : text[..max];
 
         private static string CenterReceiptLine(string text, int width = 30)
         {
@@ -430,99 +322,68 @@ namespace CirilloCash
         {
             savedTransactionData = null;
 
-            foreach (var label in labelGrid)
-            {
-                label.Text = string.Empty;
-            }
+            drinkBillRows.Clear();
+            foodBillRows.Clear();
 
-            labelGrid[0, 1].Text = "CONTO";
-
-            int rowCounter = 1;
             double total = 0;
-            foreach (var drink in drinks)
+            foreach (var row in rowsById.Values
+                         .Where(r => r.Quantity > 0)
+                         .OrderBy(r => r.SortOrder)
+                         .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
             {
-                labelGrid[rowCounter, 0].Text = $"{drink.Key.ToDescription()}";
-                labelGrid[rowCounter, 1].Text = $"{drink.Value} x {prices[drink.Key]} €";
-                labelGrid[rowCounter, 2].Text = $"{drink.Value * prices[drink.Key]} €";
-
-                total += drink.Value * prices[drink.Key];
-
-                rowCounter++;
+                var billRow = new BillItemRow(row);
+                if (row.Category == MenuCategory.Drink)
+                {
+                    drinkBillRows.Add(billRow);
+                }
+                else
+                {
+                    foodBillRows.Add(billRow);
+                }
+                total += row.LineTotal;
             }
-
-            labelGrid[rowCounter, 0].Text = "---------";
-            labelGrid[rowCounter, 1].Text = "---------";
-            labelGrid[rowCounter, 2].Text = "---------";
-
-            rowCounter++;
-
-            labelGrid[rowCounter, 0].Text = "TOTALE";
-            labelGrid[rowCounter, 2].Text = $"{total} €";
 
             totalBill = total;
+            TotaleLb.Text = $"{total:0.00} €";
+
+            DrinkBillSection.IsVisible = drinkBillRows.Count > 0;
+            FoodBillSection.IsVisible = foodBillRows.Count > 0;
+            EmptyBillLb.IsVisible = drinkBillRows.Count == 0 && foodBillRows.Count == 0;
         }
+
         public void CleanBill()
         {
-            drinks = new Dictionary<DrinkType, int>();
             savedTransactionData = null;
 
-            foreach (var label in labelGrid)
+            foreach (var row in rowsById.Values)
             {
-                label.Text = string.Empty;
+                row.Quantity = 0;
             }
+
+            drinkBillRows.Clear();
+            foodBillRows.Clear();
+            DrinkBillSection.IsVisible = false;
+            FoodBillSection.IsVisible = false;
+            EmptyBillLb.IsVisible = true;
 
             totalBill = 0;
             totalMoney = 0;
 
             ReminderLb.Text = "";
             MoneyLb.Text = "";
+            TotaleLb.Text = "0,00 €";
         }
 
-        public void OnM100Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 100;
-            UpdateMoney();
-        }
-        public void OnM50Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 50;
-            UpdateMoney();
-        }
-        public void OnM20Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 20;
-            UpdateMoney();
-        }
-        public void OnM10Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 10;
-            UpdateMoney();
-        }
-        public void OnM5Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 5;
-            UpdateMoney();
-        }
-        public void OnM2Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 2;
-            UpdateMoney();
-        }
-        public void OnM1Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 1;
-            UpdateMoney();
-        }
-        public void OnM05Clicked(object sender, EventArgs e)
-        {
-            totalMoney += 0.5;
-            UpdateMoney();
-        }
+        public void OnM100Clicked(object sender, EventArgs e) { totalMoney += 100; UpdateMoney(); }
+        public void OnM50Clicked(object sender, EventArgs e)  { totalMoney += 50;  UpdateMoney(); }
+        public void OnM20Clicked(object sender, EventArgs e)  { totalMoney += 20;  UpdateMoney(); }
+        public void OnM10Clicked(object sender, EventArgs e)  { totalMoney += 10;  UpdateMoney(); }
+        public void OnM5Clicked(object sender, EventArgs e)   { totalMoney += 5;   UpdateMoney(); }
+        public void OnM2Clicked(object sender, EventArgs e)   { totalMoney += 2;   UpdateMoney(); }
+        public void OnM1Clicked(object sender, EventArgs e)   { totalMoney += 1;   UpdateMoney(); }
+        public void OnM05Clicked(object sender, EventArgs e)  { totalMoney += 0.5; UpdateMoney(); }
 
-        public void UpdateMoney()
-        {
-            MoneyLb.Text = $"TOTALE: {totalMoney} €";
-        }
+        public void UpdateMoney() => MoneyLb.Text = $"TOTALE: {totalMoney:0.00} €";
 
         public void OnCleanMoneyClicked(object sender, EventArgs e)
         {
@@ -533,17 +394,93 @@ namespace CirilloCash
 
         public void OnComputeReminderClicked(object sender, EventArgs e)
         {
-            ReminderLb.Text = $"RESTO: {totalMoney - totalBill} €";
+            ReminderLb.Text = $"RESTO: {totalMoney - totalBill:0.00} €";
         }
     }
 
-    public static class EnumExtensions
+    public sealed class OrderItemRow : INotifyPropertyChanged
     {
-        public static string ToDescription(this Enum value)
+        private int quantity;
+
+        public OrderItemRow(CatalogItem item)
         {
-            var fi = value.GetType().GetField(value.ToString());
-            var attrs = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-            return attrs.Length > 0 ? attrs[0].Description : value.ToString();
+            Id = item.Id;
+            Name = item.Name;
+            Price = item.Price;
+            Category = item.Category;
+            SortOrder = item.SortOrder;
         }
+
+        public string Id { get; }
+        public string Name { get; }
+        public double Price { get; }
+        public MenuCategory Category { get; }
+        public int SortOrder { get; }
+
+        public int Quantity
+        {
+            get => quantity;
+            set
+            {
+                if (quantity == value)
+                {
+                    return;
+                }
+                quantity = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(QuantityText));
+                OnPropertyChanged(nameof(LineTotal));
+            }
+        }
+
+        public string ButtonLabel => Name;
+        public string QuantityText => Quantity > 0 ? Quantity.ToString() : "—";
+        public double LineTotal => Price * Quantity;
+
+        public CatalogItem Snapshot() => new()
+        {
+            Id = Id,
+            Name = Name,
+            Price = Price,
+            Category = Category,
+            SortOrder = SortOrder
+        };
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
+    public sealed class BillItemRow
+    {
+        public BillItemRow(OrderItemRow row)
+        {
+            Id = row.Id;
+            Name = row.Name;
+            Price = row.Price;
+            Quantity = row.Quantity;
+            Category = row.Category;
+            SortOrder = row.SortOrder;
+        }
+
+        public string Id { get; }
+        public string Name { get; }
+        public double Price { get; }
+        public int Quantity { get; }
+        public MenuCategory Category { get; }
+        public int SortOrder { get; }
+
+        public string QuantityXPrice => $"{Quantity} x {Price:0.00} €";
+        public double LineTotal => Price * Quantity;
+        public string LineTotalText => $"{LineTotal:0.00} €";
+
+        public CatalogItem Snapshot() => new()
+        {
+            Id = Id,
+            Name = Name,
+            Price = Price,
+            Category = Category,
+            SortOrder = SortOrder
+        };
     }
 }

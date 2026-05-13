@@ -1,15 +1,17 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="CirilloCash.TransactionsPage"
     Title="Transazioni">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
-            <Button Text="Carica transazioni" Clicked="OnLoadClicked"/>
-            <ScrollView>
-                <Label x:Name="ContentLabel" LineBreakMode="WordWrap" />
-            </ScrollView>
-        </VerticalStackLayout>
-    </ScrollView>
+    <Grid Padding="20" RowSpacing="10" RowDefinitions="Auto,Auto,*">
+        <Button Grid.Row="0" Text="Carica transazioni" Clicked="OnLoadClicked"/>
+        <Grid Grid.Row="1" ColumnSpacing="8" ColumnDefinitions="*,*">
+            <Button Grid.Column="0" Text="Esporta" Clicked="OnExportClicked" />
+            <Button Grid.Column="1" Text="Delete" Clicked="OnDeleteClicked" BackgroundColor="#B33A3A" TextColor="White" />
+        </Grid>
+        <ScrollView Grid.Row="2">
+            <Label x:Name="ContentLabel" LineBreakMode="WordWrap" />
+        </ScrollView>
+    </Grid>
 </ContentPage>

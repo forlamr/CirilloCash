@@ -1,4 +1,6 @@
-﻿namespace CirilloCash
+using CirilloCash.Services;
+
+namespace CirilloCash
 {
     public partial class TransactionsPage : ContentPage
     {
@@ -13,40 +15,67 @@
             ContentLabel.Text = string.Empty;
         }
 
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-        }
-
         public async void OnLoadClicked(object sender, EventArgs e)
         {
-#if ANDROID
-            if (!StoragePermissionHelper.HasManageAllFilesPermission())
+            if (!TransactionsStorage.Exists())
             {
-                StoragePermissionHelper.RequestManageAllFilesPermission();
-                bool granted = await StoragePermissionHelper.WaitForPermissionResult();
-                if (!granted)
+                ContentLabel.Text = "Nessuna transazione registrata.";
+                return;
+            }
+
+            ContentLabel.Text = await TransactionsStorage.ReadAllAsync();
+        }
+
+        public async void OnExportClicked(object sender, EventArgs e)
+        {
+            if (!TransactionsStorage.Exists())
+            {
+                await DisplayAlert("Esporta", "Nessuna transazione da esportare.", "OK");
+                return;
+            }
+
+            try
+            {
+                await Share.Default.RequestAsync(new ShareFileRequest
                 {
-                    await DisplayAlert("Permesso negato", "Servono permessi per accedere ai file!", "OK");
-                    return;
-                }
+                    Title = "Esporta transazioni",
+                    File = new ShareFile(TransactionsStorage.FilePath)
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Esporta", $"Errore: {ex.Message}", "OK");
+            }
+        }
+
+        public async void OnDeleteClicked(object sender, EventArgs e)
+        {
+            if (!TransactionsStorage.Exists())
+            {
+                await DisplayAlert("Delete", "Nessuna transazione da eliminare.", "OK");
+                return;
             }
 
-            string downloadsPath = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDownloads).AbsolutePath;
-            string file = Path.Combine(downloadsPath, "transazioni.txt");
+            var confirmed = await DisplayAlert(
+                "Delete",
+                "Eliminare tutte le transazioni? L'operazione è irreversibile.",
+                "Elimina", "Annulla");
 
-            if (File.Exists(file))
+            if (!confirmed)
             {
-                string text = await File.ReadAllTextAsync(file);
-                ContentLabel.Text = text;
+                return;
             }
-            else
+
+            try
             {
-                ContentLabel.Text = "File non trovato: " + file;
+                TransactionsStorage.Delete();
+                ContentLabel.Text = string.Empty;
+                await DisplayAlert("Delete", "Transazioni eliminate.", "OK");
             }
-#else
-            ContentLabel.Text = "Funzionalità disponibile solo su Android.";
-#endif
+            catch (Exception ex)
+            {
+                await DisplayAlert("Delete", $"Errore: {ex.Message}", "OK");
+            }
         }
     }
 }

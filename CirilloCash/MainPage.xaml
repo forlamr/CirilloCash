@@ -194,7 +194,7 @@
         <VerticalStackLayout Padding="16,16,16,22" Spacing="12">
             <VerticalStackLayout Spacing="2" Padding="2,0,2,4">
                 <Label Text="Cirillo Cash" TextColor="{StaticResource InkWarm}" FontFamily="OpenSansSemibold" FontSize="28" />
-                <Label Text="Cassa bevande" TextColor="{StaticResource MutedWarm}" FontFamily="OpenSansRegular" FontSize="14" />
+                <Label Text="Cassa" TextColor="{StaticResource MutedWarm}" FontFamily="OpenSansRegular" FontSize="14" />
                 <BoxView HeightRequest="2" WidthRequest="72" HorizontalOptions="Start" BackgroundColor="{StaticResource AccentGold}" Margin="0,8,0,0" />
             </VerticalStackLayout>
 
@@ -205,25 +205,39 @@
                         <Label Text="Aggiungi o rimuovi articoli." Style="{StaticResource SectionCaptionStyle}" />
                     </VerticalStackLayout>
 
-                    <Grid ColumnDefinitions="*,62" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-                        <Button x:Name="AddBlondeBeerBtn" Text="Bionda" Grid.Row="0" Grid.Column="0" Clicked="OnAddBlondeBeerClicked" Style="{StaticResource DrinkButtonStyle}" />
-                        <Button x:Name="RemoveBlondeBeerBtn" Text="-" Grid.Row="0" Grid.Column="1" Clicked="OnRemoveBlondeBeerClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
-
-                        <Button x:Name="AddRedBeerBtn" Text="Rossa" Grid.Row="1" Grid.Column="0" Clicked="OnAddRedBeerClicked" Style="{StaticResource DrinkButtonStyle}" />
-                        <Button x:Name="RemoveRedBeerBtn" Text="-" Grid.Row="1" Grid.Column="1" Clicked="OnRemoveRedBeerClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
-
-                        <Button x:Name="AddSpritzBtn" Text="Spritz" Grid.Row="2" Grid.Column="0" Clicked="OnAddSpritzClicked" Style="{StaticResource DrinkButtonStyle}" />
-                        <Button x:Name="RemoveSpritzBtn" Text="-" Grid.Row="2" Grid.Column="1" Clicked="OnRemoveSpritzClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
-
-                        <Button x:Name="AddWaterBtn" Text="Acqua" Grid.Row="3" Grid.Column="0" Clicked="OnAddWaterClicked" Style="{StaticResource DrinkButtonStyle}" />
-                        <Button x:Name="RemoveWaterBtn" Text="-" Grid.Row="3" Grid.Column="1" Clicked="OnRemoveWaterClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
-
-                        <Button x:Name="AddSoftDrinkBtn" Text="Bibita" Grid.Row="4" Grid.Column="0" Clicked="OnAddSoftDrinkClicked" Style="{StaticResource DrinkButtonStyle}" />
-                        <Button x:Name="RemoveSoftDrinkBtn" Text="-" Grid.Row="4" Grid.Column="1" Clicked="OnRemoveSoftDrinkClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
-
-                        <Button x:Name="AddWaterMelonBtn" Text="Anguria" Grid.Row="5" Grid.Column="0" Clicked="OnAddWaterMelonClicked" Style="{StaticResource DrinkButtonStyle}" />
-                        <Button x:Name="RemoveWaterMelonBtn" Text="-" Grid.Row="5" Grid.Column="1" Clicked="OnRemoveWaterMelonClicked" Style="{StaticResource RemoveDrinkButtonStyle}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button x:Name="DrinksTabBtn" Grid.Column="0" Text="DRINK" Clicked="OnDrinksTabClicked" Style="{StaticResource NeutralButtonStyle}" />
+                        <Button x:Name="FoodTabBtn"   Grid.Column="1" Text="FOOD"  Clicked="OnFoodTabClicked"   Style="{StaticResource NeutralButtonStyle}" />
                     </Grid>
+
+                    <CollectionView x:Name="OrderItemsView" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="0,4" ColumnDefinitions="*,Auto,62" ColumnSpacing="8">
+                                    <Button Grid.Column="0"
+                                            Text="{Binding ButtonLabel}"
+                                            Clicked="OnAddItemClicked"
+                                            CommandParameter="{Binding Id}"
+                                            Style="{StaticResource DrinkButtonStyle}" />
+                                    <Label  Grid.Column="1"
+                                            Text="{Binding QuantityText}"
+                                            Style="{StaticResource ReceiptValueLabelStyle}"
+                                            VerticalOptions="Center"
+                                            WidthRequest="48"
+                                            HorizontalTextAlignment="Center" />
+                                    <Button Grid.Column="2"
+                                            Text="-"
+                                            Clicked="OnRemoveItemClicked"
+                                            CommandParameter="{Binding Id}"
+                                            Style="{StaticResource RemoveDrinkButtonStyle}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <Label Text="Nessun articolo in questa categoria. Aggiungilo dal menu 'Catalogo'."
+                                   HorizontalTextAlignment="Center" Padding="20" />
+                        </CollectionView.EmptyView>
+                    </CollectionView>
                 </VerticalStackLayout>
             </Border>
 
@@ -238,52 +252,47 @@
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="0" />
                         </Border.StrokeShape>
-                        <Grid x:Name="TotaleGrid" RowSpacing="6" ColumnSpacing="10">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                        <VerticalStackLayout Spacing="6">
+                            <Label x:Name="EmptyBillLb" Text="Nessun articolo selezionato."
+                                   HorizontalTextAlignment="Center" Padding="6" />
 
-                            <Label x:Name="Label00" Grid.Row="0" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label01" Grid.Row="0" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label02" Grid.Row="0" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label10" Grid.Row="1" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label11" Grid.Row="1" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label12" Grid.Row="1" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label20" Grid.Row="2" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label21" Grid.Row="2" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label22" Grid.Row="2" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label30" Grid.Row="3" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label31" Grid.Row="3" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label32" Grid.Row="3" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label40" Grid.Row="4" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label41" Grid.Row="4" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label42" Grid.Row="4" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label50" Grid.Row="5" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label51" Grid.Row="5" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label52" Grid.Row="5" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label60" Grid.Row="6" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label61" Grid.Row="6" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label62" Grid.Row="6" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label70" Grid.Row="7" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label71" Grid.Row="7" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label72" Grid.Row="7" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label80" Grid.Row="8" Grid.Column="0" Style="{StaticResource ReceiptLabelStyle}" />
-                            <Label x:Name="Label81" Grid.Row="8" Grid.Column="1" Style="{StaticResource ReceiptValueLabelStyle}" />
-                            <Label x:Name="Label82" Grid.Row="8" Grid.Column="2" Style="{StaticResource ReceiptValueLabelStyle}" />
-                        </Grid>
+                            <VerticalStackLayout x:Name="DrinkBillSection" Spacing="4" IsVisible="False">
+                                <Label Text="DRINK" FontAttributes="Bold" Style="{StaticResource ReceiptLabelStyle}" />
+                                <CollectionView x:Name="DrinkBillView" SelectionMode="None">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="10" ColumnDefinitions="*,Auto,Auto">
+                                                <Label Grid.Column="0" Text="{Binding Name}" Style="{StaticResource ReceiptLabelStyle}" />
+                                                <Label Grid.Column="1" Text="{Binding QuantityXPrice}" Style="{StaticResource ReceiptValueLabelStyle}" />
+                                                <Label Grid.Column="2" Text="{Binding LineTotalText}" Style="{StaticResource ReceiptValueLabelStyle}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout x:Name="FoodBillSection" Spacing="4" IsVisible="False">
+                                <Label Text="FOOD" FontAttributes="Bold" Style="{StaticResource ReceiptLabelStyle}" />
+                                <CollectionView x:Name="FoodBillView" SelectionMode="None">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="10" ColumnDefinitions="*,Auto,Auto">
+                                                <Label Grid.Column="0" Text="{Binding Name}" Style="{StaticResource ReceiptLabelStyle}" />
+                                                <Label Grid.Column="1" Text="{Binding QuantityXPrice}" Style="{StaticResource ReceiptValueLabelStyle}" />
+                                                <Label Grid.Column="2" Text="{Binding LineTotalText}" Style="{StaticResource ReceiptValueLabelStyle}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                            </VerticalStackLayout>
+
+                            <BoxView HeightRequest="1" BackgroundColor="{StaticResource LineWarm}" />
+
+                            <Grid ColumnSpacing="10" ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="TOTALE" Style="{StaticResource ReceiptLabelStyle}" FontAttributes="Bold" />
+                                <Label Grid.Column="1" x:Name="TotaleLb" Text="0,00 €" Style="{StaticResource ReceiptValueLabelStyle}" FontAttributes="Bold" />
+                            </Grid>
+                        </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
             </Border>
