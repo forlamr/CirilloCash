@@ -144,10 +144,7 @@ namespace CirilloCash
             }
             else
             {
-                printResult = await thermalPrinterService.PrintAsync(
-                    saveResult.ReceiptText,
-                    PrinterSettings.PrinterNameHint,
-                    PrinterSettings.PrinterMacAddress);
+                printResult = await PrintBluetoothReceiptsAsync();
             }
 
             if (printResult.Success)
@@ -163,6 +160,37 @@ namespace CirilloCash
             }
 
             await DisplayAlert("Stampa", printResult.Message, "OK");
+        }
+
+        private async Task<PrinterResult> PrintBluetoothReceiptsAsync()
+        {
+            var timestamp = DateTime.Now;
+            var docs = new List<ReceiptDocument>();
+            var labels = new List<string>();
+
+            if (drinkBillRows.Count > 0)
+            {
+                docs.Add(BuildReceiptDocument(drinkBillRows, "DRINK", timestamp));
+                labels.Add("DRINK");
+            }
+
+            if (foodBillRows.Count > 0)
+            {
+                docs.Add(BuildReceiptDocument(foodBillRows, "FOOD", timestamp));
+                labels.Add("FOOD");
+            }
+
+            var result = await thermalPrinterService.PrintReceiptsAsync(
+                docs,
+                PrinterSettings.PrinterNameHint,
+                PrinterSettings.PrinterMacAddress);
+
+            if (result.Success)
+            {
+                return PrinterResult.Ok($"Scontrini inviati: {string.Join(" + ", labels)}.");
+            }
+
+            return result;
         }
 
         private async Task<PrinterResult> PrintEthernetReceiptsAsync()

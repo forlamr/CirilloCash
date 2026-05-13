@@ -70,14 +70,6 @@ public partial class PrinterSettingsPage : ContentPage
 
     private async void OnTestPrintClicked(object sender, EventArgs e)
     {
-        var sample =
-            "      POLO ZEROSEI\r\n" +
-            "    DON CIRILLO PIZIO\r\n" +
-            "------------------------------\r\n" +
-            "Stampa di prova\r\n" +
-            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\r\n" +
-            "------------------------------\r\n";
-
         var activePrinter = (ActivePrinter)Math.Max(0, PrinterTypePicker.SelectedIndex);
 
         PrinterResult result;
@@ -109,7 +101,20 @@ public partial class PrinterSettingsPage : ContentPage
                 ? ThermalPrinterService.DefaultPrinterHint
                 : PrinterNameEntry.Text.Trim();
             var printerMac = PrinterMacEntry.Text?.Trim().ToUpperInvariant() ?? string.Empty;
-            result = await thermalPrinterService.PrintAsync(sample, printerName, printerMac);
+
+            var testDoc = new ReceiptDocument
+            {
+                Title = "POLO ZEROSEI",
+                Subtitle = "DON CIRILLO PIZIO",
+                SectionLabel = "TEST",
+                Items = new[]
+                {
+                    new ReceiptLineItem("Stampa di prova", 1, 0.00, 0.00)
+                },
+                Total = 0.00,
+                Timestamp = DateTime.Now
+            };
+            result = await thermalPrinterService.PrintReceiptsAsync(new[] { testDoc }, printerName, printerMac);
         }
 
         await DisplayAlert("Stampa di prova", result.Message, "OK");
