@@ -21,7 +21,7 @@ namespace CirilloCash
         private MenuCategory currentCategory = MenuCategory.Drink;
         private double totalBill;
         private double totalMoney;
-        private (string SerializedTransaction, string ReceiptText)? savedTransactionData;
+        private bool transactionAlreadySaved;
 
         public MainPage()
         {
@@ -106,8 +106,7 @@ namespace CirilloCash
 
         private async void OnSaveClicked(object sender, EventArgs e)
         {
-            var saveResult = await TrySaveCurrentTransactionAsync("Salvataggio", "Nessuna transazione da salvare.");
-            if (!saveResult.Success)
+            if (!await TrySaveCurrentTransactionAsync("Salvataggio", "Nessuna transazione da salvare."))
             {
                 return;
             }
@@ -131,8 +130,7 @@ namespace CirilloCash
                 return;
             }
 
-            var saveResult = await TrySaveCurrentTransactionAsync("Stampa", "Nessun conto da stampare.");
-            if (!saveResult.Success)
+            if (!await TrySaveCurrentTransactionAsync("Stampa", "Nessun conto da stampare."))
             {
                 return;
             }
@@ -240,50 +238,44 @@ namespace CirilloCash
 
         private bool HasPendingTransaction() => (drinkBillRows.Count + foodBillRows.Count) > 0 && totalBill > 0;
 
-        private async Task<(bool Success, string ReceiptText)> TrySaveCurrentTransactionAsync(string emptyAlertTitle, string emptyAlertMessage)
+        private async Task<bool> TrySaveCurrentTransactionAsync(string emptyAlertTitle, string emptyAlertMessage)
         {
             if (!HasPendingTransaction())
             {
                 await DisplayAlert(emptyAlertTitle, emptyAlertMessage, "OK");
-                return (false, string.Empty);
+                return false;
             }
 
-            if (savedTransactionData.HasValue)
+            if (transactionAlreadySaved)
             {
-                return (true, savedTransactionData.Value.ReceiptText);
+                return true;
             }
 
             try
             {
-                var transactionData = BuildTransactionData();
-                await TransactionsStorage.AppendLineAsync(transactionData.SerializedTransaction);
-                savedTransactionData = transactionData;
-                return (true, transactionData.ReceiptText);
+                await TransactionsStorage.AppendLineAsync(BuildSerializedTransaction());
+                transactionAlreadySaved = true;
+                return true;
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Salvataggio", $"Errore durante il salvataggio della transazione: {ex.Message}", "OK");
-                return (false, string.Empty);
+                return false;
             }
         }
 
-        private (string SerializedTransaction, string ReceiptText) BuildTransactionData()
+        private string BuildSerializedTransaction()
         {
-            var allRows = drinkBillRows.Concat(foodBillRows).ToList();
-            var timestamp = DateTime.Now;
-
-            var transactionBuilder = new StringBuilder();
-            transactionBuilder.Append($"DATA={timestamp:yyyy-MM-dd HH:mm:ss};");
+            var sb = new StringBuilder();
+            sb.Append($"DATA={DateTime.Now:yyyy-MM-dd HH:mm:ss};");
             double total = 0;
-            foreach (var row in allRows)
+            foreach (var row in drinkBillRows.Concat(foodBillRows))
             {
-                transactionBuilder.Append($"{row.Name}={row.Quantity};");
+                sb.Append($"{row.Name}={row.Quantity};");
                 total += row.LineTotal;
             }
-            transactionBuilder.Append(string.Create(CultureInfo.InvariantCulture, $"TOTALE={total:0.00}"));
-
-            var receipt = BuildReceiptText(allRows, timestamp, sectionLabel: null);
-            return (transactionBuilder.ToString(), receipt);
+            sb.Append(string.Create(CultureInfo.InvariantCulture, $"TOTALE={total:0.00}"));
+            return sb.ToString();
         }
 
         private static ReceiptDocument BuildReceiptDocument(IEnumerable<BillItemRow> rows, string sectionLabel, DateTime timestamp)
@@ -303,52 +295,9 @@ namespace CirilloCash
             };
         }
 
-        private static string BuildReceiptText(IReadOnlyCollection<BillItemRow> rows, DateTime timestamp, string? sectionLabel)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(CenterReceiptLine("POLO ZEROSEI"));
-            sb.AppendLine(CenterReceiptLine("DON CIRILLO PIZIO"));
-            if (!string.IsNullOrEmpty(sectionLabel))
-            {
-                sb.AppendLine(CenterReceiptLine(sectionLabel));
-            }
-            sb.AppendLine("------------------------------");
-
-            double total = 0;
-            foreach (var row in rows)
-            {
-                sb.AppendLine($"{Truncate(row.Name, 12),-12}{row.Quantity,3}");
-                total += row.LineTotal;
-            }
-
-            sb.AppendLine("------------------------------");
-            sb.AppendLine(CenterReceiptLine($"TOTALE {total:0.00} EUR"));
-            sb.AppendLine(CenterReceiptLine(timestamp.ToString("yyyy-MM-dd HH:mm:ss")));
-
-            for (var i = 0; i < 3; i++)
-            {
-                sb.AppendLine();
-            }
-
-            return sb.ToString();
-        }
-
-        private static string Truncate(string text, int max) => text.Length <= max ? text : text[..max];
-
-        private static string CenterReceiptLine(string text, int width = 30)
-        {
-            if (string.IsNullOrWhiteSpace(text) || text.Length >= width)
-            {
-                return text;
-            }
-
-            var leftPadding = (width - text.Length) / 2;
-            return new string(' ', leftPadding) + text;
-        }
-
         public void UpdateBill()
         {
-            savedTransactionData = null;
+            transactionAlreadySaved = false;
 
             drinkBillRows.Clear();
             foodBillRows.Clear();
@@ -381,7 +330,7 @@ namespace CirilloCash
 
         public void CleanBill()
         {
-            savedTransactionData = null;
+            transactionAlreadySaved = false;
 
             foreach (var row in rowsById.Values)
             {
@@ -464,15 +413,6 @@ namespace CirilloCash
         public string ButtonLabel => Name;
         public string QuantityText => Quantity > 0 ? Quantity.ToString() : "—";
         public double LineTotal => Price * Quantity;
-
-        public CatalogItem Snapshot() => new()
-        {
-            Id = Id,
-            Name = Name,
-            Price = Price,
-            Category = Category,
-            SortOrder = SortOrder
-        };
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)

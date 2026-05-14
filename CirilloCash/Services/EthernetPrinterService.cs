@@ -32,17 +32,6 @@ public sealed class EthernetPrinterService
 
     private static readonly Encoding ReceiptEncoding = ResolveReceiptEncoding();
 
-    public async Task<PrinterResult> PrintAsync(string text, string host, int port)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return PrinterResult.Fail("Nessun contenuto da stampare.");
-        }
-
-        var payload = BuildPlainTextPayload(text);
-        return await SendAsync(payload, host, port);
-    }
-
     public async Task<PrinterResult> PrintReceiptAsync(ReceiptDocument document, string host, int port)
     {
         if (document.Items.Count == 0)
@@ -114,23 +103,6 @@ public sealed class EthernetPrinterService
         {
             return PrinterResult.Fail($"Errore stampa Ethernet: {ex.Message}");
         }
-    }
-
-    private static byte[] BuildPlainTextPayload(string text)
-    {
-        var buffer = new EscPosBuilder();
-        buffer.Append(EscInit);
-        buffer.Append(SelectCodepage);
-        buffer.Append(SelectIntlCharset);
-        buffer.Append(AlignLeft);
-
-        foreach (var line in NormalizeLines(text))
-        {
-            buffer.WriteLine(line);
-        }
-
-        buffer.Append(FeedAndCut);
-        return buffer.ToArray();
     }
 
     private static byte[] BuildReceiptPayload(ReceiptDocument doc)
@@ -207,11 +179,6 @@ public sealed class EthernetPrinterService
         var leftPadded = left.Length >= lw ? left[..lw] : left.PadRight(lw);
         var rightPadded = right.Length >= aw ? right[..aw] : right.PadLeft(aw);
         return leftPadded + rightPadded;
-    }
-
-    private static IEnumerable<string> NormalizeLines(string text)
-    {
-        return text.Replace("\r\n", "\n").Split('\n');
     }
 
     private static Encoding ResolveReceiptEncoding()

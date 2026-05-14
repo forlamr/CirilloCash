@@ -39,24 +39,6 @@ public sealed class ThermalPrinterService
     private static readonly byte[] JlTrailerFrame = Convert.FromHexString("13EF090A0A0A0A65");
 #endif
 
-    public async Task<PrinterResult> PrintAsync(
-        string text,
-        string printerNameHint = DefaultPrinterHint,
-        string printerMacAddress = "")
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return PrinterResult.Fail("Nessun contenuto da stampare.");
-        }
-
-#if ANDROID
-        return await Task.Run(() => PrintOnAndroid(text, printerNameHint, printerMacAddress));
-#else
-        await Task.CompletedTask;
-        return PrinterResult.Fail("Stampa termica supportata solo su Android.");
-#endif
-    }
-
     public async Task<PrinterResult> PrintReceiptsAsync(
         IEnumerable<ReceiptDocument> documents,
         string printerNameHint = DefaultPrinterHint,
@@ -77,57 +59,6 @@ public sealed class ThermalPrinterService
     }
 
 #if ANDROID
-    private static PrinterResult PrintOnAndroid(string text, string printerNameHint, string printerMacAddress)
-    {
-        try
-        {
-            var adapter = BluetoothAdapter.DefaultAdapter;
-            if (adapter is null)
-            {
-                return PrinterResult.Fail("Bluetooth non disponibile sul dispositivo.");
-            }
-
-            if (!adapter.IsEnabled)
-            {
-                return PrinterResult.Fail("Bluetooth disattivato. Attivalo e riprova.");
-            }
-
-            var bondedDevices = adapter.BondedDevices;
-            if (bondedDevices is null || bondedDevices.Count == 0)
-            {
-                return PrinterResult.Fail("Nessuna stampante associata. Associa prima il modello X5.");
-            }
-
-            var printer = FindBondedPrinter(adapter, printerNameHint, printerMacAddress);
-            if (printer is null)
-            {
-                var names = string.Join(", ", bondedDevices
-                    .Select(d => string.IsNullOrWhiteSpace(d.Name) ? d.Address : $"{d.Name} ({d.Address})"));
-                return PrinterResult.Fail(
-                    $"Stampante non trovata. Filtro nome='{printerNameHint}', MAC='{printerMacAddress}'. Dispositivi associati: {names}");
-            }
-
-            var secureResult = TryPrintSpp(printer, adapter, text, useInsecureSocket: false);
-            if (secureResult.Success)
-            {
-                return secureResult;
-            }
-
-            var insecureResult = TryPrintSpp(printer, adapter, text, useInsecureSocket: true);
-            if (insecureResult.Success)
-            {
-                return insecureResult;
-            }
-
-            return PrinterResult.Fail(
-                $"Connessione alla stampante fallita. Tentativo secure: {secureResult.Message} | Tentativo insecure: {insecureResult.Message}");
-        }
-        catch (Exception ex)
-        {
-            return WrapAndroidPrintError(ex);
-        }
-    }
-
     private static PrinterResult WrapAndroidPrintError(Exception ex)
     {
         if (ex.Message.Contains("bluetooth", StringComparison.OrdinalIgnoreCase) ||
@@ -162,40 +93,6 @@ public sealed class ThermalPrinterService
         return bondedDevices.FirstOrDefault(d =>
             !string.IsNullOrWhiteSpace(d.Name) &&
             d.Name.Contains(printerNameHint, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static PrinterResult TryPrintSpp(
-        BluetoothDevice printer,
-        BluetoothAdapter adapter,
-        string text,
-        bool useInsecureSocket)
-    {
-        try
-        {
-            using var socket = useInsecureSocket
-                ? printer.CreateInsecureRfcommSocketToServiceRecord(SppUuid)
-                : printer.CreateRfcommSocketToServiceRecord(SppUuid);
-
-            adapter.CancelDiscovery();
-            socket.Connect();
-
-            using var stream = socket.OutputStream
-                ?? throw new InvalidOperationException("Output stream Bluetooth non disponibile.");
-            WriteJlSppFrames(stream, text);
-
-            return PrinterResult.Ok(
-                $"Stampa inviata a {printer.Name} ({(useInsecureSocket ? "insecure" : "secure")}, protocollo {DefaultPrinterLanguage}).");
-        }
-        catch (Exception ex)
-        {
-            return PrinterResult.Fail($"{(useInsecureSocket ? "insecure" : "secure")}: {ex.Message}");
-        }
-    }
-
-    private static void WriteJlSppFrames(Stream stream, string text)
-    {
-        var frames = BuildJlSppRasterFrames(text);
-        WriteFrames(stream, frames);
     }
 
     private static void WriteJlSppFramesForReceipts(Stream stream, IReadOnlyList<ReceiptDocument> docs)
@@ -449,52 +346,6 @@ public sealed class ThermalPrinterService
         return paint;
     }
 
-    private static IReadOnlyList<JlFramePlan> BuildJlSppRasterFrames(string text)
-    {
-        var frames = new List<JlFramePlan>();
-        for (var i = 0; i < JlInitFrames.Length; i++)
-        {
-            frames.Add(new JlFramePlan(JlInitFrames[i], JlInitPostDelaysMs[i]));
-        }
-
-        var segments = BuildEscPosRasterSegments(text);
-        for (var segmentIndex = 0; segmentIndex < segments.Count; segmentIndex++)
-        {
-            var segmentFrames = BuildJlFramesForPayload(segments[segmentIndex]);
-            var isLastSegment = segmentIndex == segments.Count - 1;
-            for (var frameIndex = 0; frameIndex < segmentFrames.Count; frameIndex++)
-            {
-                var isLastFrameOfSegment = frameIndex == segmentFrames.Count - 1;
-                var delay = isLastSegment
-                    ? (isLastFrameOfSegment ? 100 : 1)
-                    : (isLastFrameOfSegment ? 28 : 1);
-                frames.Add(new JlFramePlan(segmentFrames[frameIndex], delay));
-            }
-        }
-
-        frames.Add(new JlFramePlan(JlTrailerFrame, 0));
-        return frames;
-    }
-
-    private static List<byte[]> BuildEscPosRasterSegments(string text)
-    {
-        var lines = GetPrintableLines(text);
-        var segments = new List<byte[]>(Math.Max(lines.Length, 1));
-        foreach (var line in lines)
-        {
-            using var bitmap = RenderLineBitmap(line);
-            AddRasterSegments(segments, bitmap);
-        }
-
-        if (segments.Count == 0)
-        {
-            using var bitmap = RenderLineBitmap("Nessun dato");
-            AddRasterSegments(segments, bitmap);
-        }
-
-        return segments;
-    }
-
     private static void AddRasterSegments(List<byte[]> segments, Bitmap bitmap)
     {
         var rows = BuildRasterRows(bitmap);
@@ -621,63 +472,7 @@ public sealed class ThermalPrinterService
 
     private sealed record JlFramePlan(byte[] Frame, int DelayAfterMs);
 
-    private static Bitmap RenderLineBitmap(string line)
-    {
-        const float fontSize = 24f;
-        const float leftPadding = 4f;
-        const float topPadding = 4f;
-        const float bottomPadding = 6f;
-
-        using var measurePaint = new global::Android.Graphics.Paint
-        {
-            AntiAlias = false,
-            Color = global::Android.Graphics.Color.Black,
-            TextSize = fontSize
-        };
-        measurePaint.SetTypeface(Typeface.Monospace);
-
-        var safeLine = string.IsNullOrEmpty(line) ? " " : line;
-        var metrics = measurePaint.GetFontMetrics();
-        var baseline = topPadding - metrics.Top;
-        var contentHeight = baseline + metrics.Bottom + bottomPadding;
-        var heightDots = Math.Max(1, (int)Math.Ceiling(contentHeight));
-
-        var bitmap = Bitmap.CreateBitmap(PrinterWidthDots, heightDots, Bitmap.Config.Argb8888!);
-        using var canvas = new Canvas(bitmap);
-        canvas.DrawColor(global::Android.Graphics.Color.White);
-
-        using var paint = new global::Android.Graphics.Paint(measurePaint);
-        canvas.DrawText(safeLine, leftPadding, baseline, paint);
-        return bitmap;
-    }
 #endif
-
-    private static string[] GetPrintableLines(string text)
-    {
-        var lines = PreparePrinterText(text)
-            .Replace("\r\n", "\n")
-            .Split('\n', StringSplitOptions.None);
-
-        if (lines.Length > 0 && lines[^1].Length == 0)
-        {
-            return lines.Take(lines.Length - 1).ToArray();
-        }
-
-        return lines;
-    }
-
-    private static string PreparePrinterText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return "Nessun dato";
-        }
-
-        return new string(text
-            .Replace('\t', ' ')
-            .Select(c => c <= 127 ? c : ' ')
-            .ToArray());
-    }
 }
 
 public sealed record PrinterResult(bool Success, string Message)
