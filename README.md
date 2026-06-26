@@ -7,3 +7,4 @@ Funzionalità:
 - Calcolo resto
 - Salvataggio transazioni
 - Calcolo resoconto della serata
+- Stampa ordine
