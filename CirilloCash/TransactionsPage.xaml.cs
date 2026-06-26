@@ -30,7 +30,7 @@ namespace CirilloCash
         {
             if (!TransactionsStorage.Exists())
             {
-                await DisplayAlert("Esporta", "Nessuna transazione da esportare.", "OK");
+                await DisplayAlertAsync("Esporta", "Nessuna transazione da esportare.", "OK");
                 return;
             }
 
@@ -44,7 +44,7 @@ namespace CirilloCash
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Esporta", $"Errore: {ex.Message}", "OK");
+                await DisplayAlertAsync("Esporta", $"Errore: {ex.Message}", "OK");
             }
         }
 
@@ -52,11 +52,11 @@ namespace CirilloCash
         {
             if (!TransactionsStorage.Exists())
             {
-                await DisplayAlert("Delete", "Nessuna transazione da eliminare.", "OK");
+                await DisplayAlertAsync("Delete", "Nessuna transazione da eliminare.", "OK");
                 return;
             }
 
-            var confirmed = await DisplayAlert(
+            var confirmed = await DisplayAlertAsync(
                 "Delete",
                 "Eliminare tutte le transazioni? L'operazione è irreversibile.",
                 "Elimina", "Annulla");
@@ -70,11 +70,11 @@ namespace CirilloCash
             {
                 TransactionsStorage.Delete();
                 ContentLabel.Text = string.Empty;
-                await DisplayAlert("Delete", "Transazioni eliminate.", "OK");
+                await DisplayAlertAsync("Delete", "Transazioni eliminate.", "OK");
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Delete", $"Errore: {ex.Message}", "OK");
+                await DisplayAlertAsync("Delete", $"Errore: {ex.Message}", "OK");
             }
         }
     }

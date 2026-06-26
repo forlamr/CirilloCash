@@ -118,7 +118,7 @@ namespace CirilloCash
         {
             if (!HasPendingTransaction())
             {
-                await DisplayAlert("Stampa", "Nessun conto da stampare.", "OK");
+                await DisplayAlertAsync("Stampa", "Nessun conto da stampare.", "OK");
                 return;
             }
 
@@ -126,7 +126,7 @@ namespace CirilloCash
 
             if (activePrinter == ActivePrinter.X5 && !await EnsureBluetoothPermissionAsync())
             {
-                await DisplayAlert("Stampa", "Permesso Bluetooth negato. Abilita 'Dispositivi nelle vicinanze'.", "OK");
+                await DisplayAlertAsync("Stampa", "Permesso Bluetooth negato. Abilita 'Dispositivi nelle vicinanze'.", "OK");
                 return;
             }
 
@@ -157,7 +157,7 @@ namespace CirilloCash
                 };
             }
 
-            await DisplayAlert("Stampa", printResult.Message, "OK");
+            await DisplayAlertAsync("Stampa", printResult.Message, "OK");
         }
 
         private async Task<PrinterResult> PrintBluetoothReceiptsAsync()
@@ -242,7 +242,7 @@ namespace CirilloCash
         {
             if (!HasPendingTransaction())
             {
-                await DisplayAlert(emptyAlertTitle, emptyAlertMessage, "OK");
+                await DisplayAlertAsync(emptyAlertTitle, emptyAlertMessage, "OK");
                 return false;
             }
 
@@ -259,7 +259,7 @@ namespace CirilloCash
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Salvataggio", $"Errore durante il salvataggio della transazione: {ex.Message}", "OK");
+                await DisplayAlertAsync("Salvataggio", $"Errore durante il salvataggio della transazione: {ex.Message}", "OK");
                 return false;
             }
         }

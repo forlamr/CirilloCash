@@ -46,7 +46,7 @@ public partial class PrinterSettingsPage : ContentPage
         {
             if (!TryReadEthernetSettings(out var host, out var port, out var error))
             {
-                await DisplayAlert("Impostazioni", error, "OK");
+                await DisplayAlertAsync("Impostazioni", error, "OK");
                 return;
             }
 
@@ -65,7 +65,7 @@ public partial class PrinterSettingsPage : ContentPage
         }
 
         PrinterSettings.ActivePrinter = activePrinter;
-        await DisplayAlert("Impostazioni", "Configurazione stampante salvata.", "OK");
+        await DisplayAlertAsync("Impostazioni", "Configurazione stampante salvata.", "OK");
     }
 
     private async void OnTestPrintClicked(object sender, EventArgs e)
@@ -77,7 +77,7 @@ public partial class PrinterSettingsPage : ContentPage
         {
             if (!TryReadEthernetSettings(out var host, out var port, out var error))
             {
-                await DisplayAlert("Stampa di prova", error, "OK");
+                await DisplayAlertAsync("Stampa di prova", error, "OK");
                 return;
             }
 
@@ -117,7 +117,7 @@ public partial class PrinterSettingsPage : ContentPage
             result = await thermalPrinterService.PrintReceiptsAsync(new[] { testDoc }, printerName, printerMac);
         }
 
-        await DisplayAlert("Stampa di prova", result.Message, "OK");
+        await DisplayAlertAsync("Stampa di prova", result.Message, "OK");
     }
 
     private async void OnDiscoverClicked(object sender, EventArgs e)
@@ -137,14 +137,14 @@ public partial class PrinterSettingsPage : ContentPage
 
             if (report.ResponsiveHosts.Count == 0)
             {
-                await DisplayAlert("Discovery",
+                await DisplayAlertAsync("Discovery",
                     "Nessun dispositivo risponde sulla porta 9100.\n\n" + subnetInfo,
                     "OK");
                 return;
             }
 
             var labels = report.ResponsiveHosts.Select(h => $"{h}:9100").ToArray();
-            var picked = await DisplayActionSheet(
+            var picked = await DisplayActionSheetAsync(
                 $"Dispositivi che rispondono su porta 9100 ({report.ResponsiveHosts.Count}):",
                 "Annulla", null, labels);
 
@@ -164,7 +164,7 @@ public partial class PrinterSettingsPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Discovery", $"Errore durante la ricerca: {ex.Message}", "OK");
+            await DisplayAlertAsync("Discovery", $"Errore durante la ricerca: {ex.Message}", "OK");
         }
         finally
         {

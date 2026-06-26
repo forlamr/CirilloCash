@@ -49,7 +49,7 @@ public partial class CatalogPage : ContentPage
             "0.00", keyboard: Keyboard.Numeric);
         if (!TryParsePrice(priceText, out var price))
         {
-            await DisplayAlert("Catalogo", "Prezzo non valido.", "OK");
+            await DisplayAlertAsync("Catalogo", "Prezzo non valido.", "OK");
             return;
         }
 
@@ -88,7 +88,7 @@ public partial class CatalogPage : ContentPage
             initialValue: item.Price.ToString("0.00", CultureInfo.InvariantCulture), keyboard: Keyboard.Numeric);
         if (!TryParsePrice(priceText, out var price))
         {
-            await DisplayAlert("Catalogo", "Prezzo non valido.", "OK");
+            await DisplayAlertAsync("Catalogo", "Prezzo non valido.", "OK");
             return;
         }
 
@@ -111,7 +111,7 @@ public partial class CatalogPage : ContentPage
             return;
         }
 
-        var confirmed = await DisplayAlert("Catalogo", $"Eliminare '{item.Name}'?", "Elimina", "Annulla");
+        var confirmed = await DisplayAlertAsync("Catalogo", $"Eliminare '{item.Name}'?", "Elimina", "Annulla");
         if (!confirmed)
         {
             return;
